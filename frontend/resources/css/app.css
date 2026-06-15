@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-gradient-to-br from-stone-50 via-amber-50 to-stone-100 min-h-screen text-stone-900 transition-colors duration-200;
+  }
+}
+
+:root {
+  --color-primary: #6B21B6;
+  --color-secondary: #D97706;
+  --color-tertiary: #059669;
+  --color-text: #1F2937;
+  --color-bg: #F8F7F4;
+}
+
+@layer components {
+  /* Glassmorphism Base - Light Theme */
+  .glass {
+    @apply backdrop-blur-xl bg-white/40 border border-white/60 rounded-2xl shadow-lg;
+  }
+
+  .glass-sm {
+    @apply backdrop-blur-lg bg-white/40 border border-white/60 rounded-xl shadow-md;
+  }
+
+  .glass-card {
+    @apply backdrop-blur-xl bg-white/50 border border-white/60 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all hover:bg-white/60;
+  }
+
+  .glass-button {
+    @apply px-4 py-2 backdrop-blur-md bg-white/30 border border-purple-200 text-stone-900 rounded-xl hover:bg-white/50 transition-all font-medium shadow-md;
+  }
+
+  .glass-button-primary {
+    @apply px-4 py-2 backdrop-blur-md bg-gradient-to-r from-purple-600 to-amber-600 border border-purple-300 text-white rounded-xl hover:shadow-2xl hover:shadow-purple-500/50 transition-all font-medium;
+  }
+
+  .btn-primary {
+    @apply glass-button-primary;
+  }
+
+  .btn-secondary {
+    @apply glass-button;
+  }
+
+  .card {
+    @apply glass-card;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium backdrop-blur-md bg-white/20 border border-white/30;
+  }
+
+  .badge-primary {
+    @apply badge bg-blue-500/30 border-blue-400/50 text-white;
+  }
+
+  /* Input Glassmorphism */
+  .glass-input {
+    @apply w-full backdrop-blur-md bg-white/40 border border-white/60 text-stone-900 placeholder-stone-400 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all;
+  }
+
+  /* Text colors for glass theme */
+  .glass-text {
+    @apply text-white;
+  }
+
+  .glass-text-secondary {
+    @apply text-white/70;
+  }
+}

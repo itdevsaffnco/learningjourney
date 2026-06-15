@@ -1,0 +1,40 @@
+{
+    "$schema": "https://www.schemastore.org/package.json",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite"
+    },
+    "dependencies": {
+        "@tiptap/extension-image": "^3.26.0",
+        "@tiptap/extension-link": "^3.26.0",
+        "@tiptap/react": "^3.26.0",
+        "@tiptap/starter-kit": "^3.26.0",
+        "axios": "^1.11.0",
+        "framer-motion": "^10.16.0",
+        "lucide-react": "^0.292.0",
+        "quill": "^2.0.3",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "react-quill": "^2.0.0",
+        "react-router-dom": "^6.20.0"
+    },
+    "devDependencies": {
+        "@vitejs/plugin-react": "^4.2.1",
+        "autoprefixer": "^10.4.16",
+        "postcss": "^8.4.32",
+        "tailwindcss": "^3.4.1",
+        "vite": "^7.0.7"
+    },
+    "name": "saff-lms",
+    "version": "1.0.0",
+    "description": "<p align=\"center\"><a href=\"https://laravel.com\" target=\"_blank\"><img src=\"https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg\" width=\"400\" alt=\"Laravel Logo\"></a></p>",
+    "main": "vite.config.js",
+    "directories": {
+        "test": "tests"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC"
+}
