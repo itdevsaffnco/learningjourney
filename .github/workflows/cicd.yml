@@ -102,10 +102,11 @@ jobs:
             docker network create $NETWORK 2>/dev/null || echo "Network already exists, skipping."
 
             echo "==> Preparing env directory"
-            mkdir -p /opt/learningjourney
+            mkdir -p "$HOME/learningjourney"
 
             echo "==> Writing backend .env"
-            printf '%s' "$BACKEND_ENV" > /opt/learningjourney/backend.env
+            printf '%s' "$BACKEND_ENV" > "$HOME/learningjourney/backend.env"
+            chmod 600 "$HOME/learningjourney/backend.env"
 
             # ── BACKEND ──────────────────────────────────────────────────
             echo "==> Stopping old backend container..."
@@ -122,7 +123,7 @@ jobs:
             docker run -d \
               --name learningjourney_backend \
               --network $NETWORK \
-              --env-file /opt/learningjourney/backend.env \
+              --env-file "$HOME/learningjourney/backend.env" \
               --add-host host.docker.internal:host-gateway \
               -p 2027:80 \
               --restart unless-stopped \
