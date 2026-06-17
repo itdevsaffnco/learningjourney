@@ -1,0 +1,87 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <mxCell id="2" value="1. Alur Autentikasi &amp; Role — Saff LMS" style="swimlane;startSize=30;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=14;html=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="40" width="1050" height="450" as="geometry" />
+    </mxCell>
+
+    <mxCell id="10" value="User" style="swimlane;startSize=30;horizontal=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;html=1;" vertex="1" parent="2">
+      <mxGeometry x="0" y="30" width="1050" height="210" as="geometry" />
+    </mxCell>
+
+    <mxCell id="20" value="System" style="swimlane;startSize=30;horizontal=0;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;html=1;" vertex="1" parent="2">
+      <mxGeometry x="0" y="240" width="1050" height="210" as="geometry" />
+    </mxCell>
+
+    <!-- USER nodes -->
+    <mxCell id="101" value="Buka App" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="10">
+      <mxGeometry x="50" y="80" width="100" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="102" value="Halaman Login" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="10">
+      <mxGeometry x="220" y="80" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="103" value="Input Email &amp;&#xa;Password" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="10">
+      <mxGeometry x="430" y="80" width="150" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="104" value="Klik Login" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0050ef;fontColor=#ffffff;strokeColor=#001DBC;fontStyle=1;" vertex="1" parent="10">
+      <mxGeometry x="650" y="80" width="120" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="105" value="Admin Dashboard" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="10">
+      <mxGeometry x="860" y="30" width="150" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="106" value="Trainer Dashboard" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="10">
+      <mxGeometry x="860" y="90" width="150" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="107" value="Staff Dashboard" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="10">
+      <mxGeometry x="860" y="150" width="150" height="50" as="geometry" />
+    </mxCell>
+
+    <mxCell id="110" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="101" target="102" parent="10">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="111" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="102" target="103" parent="10">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="112" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="103" target="104" parent="10">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- SYSTEM nodes -->
+    <mxCell id="201" value="Validasi Credential&#xa;(Sanctum)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="20">
+      <mxGeometry x="430" y="80" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="202" value="Error: Invalid&#xa;Credentials" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="20">
+      <mxGeometry x="430" y="155" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="203" value="Cek Role&#xa;User" style="rhombus;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="20">
+      <mxGeometry x="660" y="70" width="130" height="70" as="geometry" />
+    </mxCell>
+
+    <mxCell id="210" value="Invalid" style="edgeStyle=orthogonalEdgeStyle;html=1;dashed=1;strokeColor=#b85450;" edge="1" source="201" target="202" parent="20">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="211" value="Valid" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="201" target="203" parent="20">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Cross-lane edges -->
+    <mxCell id="301" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="104" target="201" parent="2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="302" value="Coba lagi" style="edgeStyle=orthogonalEdgeStyle;html=1;dashed=1;strokeColor=#b85450;" edge="1" source="202" target="102" parent="2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="303" value="Admin" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="203" target="105" parent="2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="304" value="Trainer" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="203" target="106" parent="2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="305" value="Staff" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="203" target="107" parent="2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+  </root>
+</mxGraphModel>

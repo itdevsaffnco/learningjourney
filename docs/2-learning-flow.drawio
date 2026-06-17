@@ -1,0 +1,110 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <mxCell id="2" value="2. Alur Belajar Staff — Saff LMS" style="swimlane;startSize=30;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=14;html=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="40" width="1450" height="610" as="geometry" />
+    </mxCell>
+
+    <mxCell id="10" value="Staff" style="swimlane;startSize=30;horizontal=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;html=1;" vertex="1" parent="2">
+      <mxGeometry x="0" y="30" width="1450" height="380" as="geometry" />
+    </mxCell>
+
+    <mxCell id="20" value="System" style="swimlane;startSize=30;horizontal=0;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;html=1;" vertex="1" parent="2">
+      <mxGeometry x="0" y="410" width="1450" height="200" as="geometry" />
+    </mxCell>
+
+    <!-- STAFF nodes — main flow y=175 -->
+    <mxCell id="101" value="Dashboard" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="10">
+      <mxGeometry x="50" y="175" width="120" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="102" value="Learning&#xa;Path List" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="10">
+      <mxGeometry x="240" y="175" width="130" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="103" value="LP Detail&#xa;(Langkah-langkah)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="10">
+      <mxGeometry x="440" y="175" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="104" value="Pilih Modul" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="10">
+      <mxGeometry x="670" y="175" width="130" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- Branch: Locked (lower) -->
+    <mxCell id="105" value="&#x1F512; Modul Terkunci&#xa;Selesaikan modul&#xa;sebelumnya dulu" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="10">
+      <mxGeometry x="880" y="290" width="190" height="70" as="geometry" />
+    </mxCell>
+
+    <!-- Branch: Unlocked (upper) -->
+    <mxCell id="106" value="CourseLearn&#xa;(Lesson Player)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="10">
+      <mxGeometry x="880" y="70" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="107" value="Tonton Video /&#xa;Baca / Kerjakan Quiz" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="10">
+      <mxGeometry x="1100" y="70" width="180" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="108" value="Klik Mark Complete" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0050ef;fontColor=#ffffff;strokeColor=#001DBC;fontStyle=1;" vertex="1" parent="10">
+      <mxGeometry x="1100" y="175" width="180" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="109" value="LP Progress&#xa;Terupdate" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="10">
+      <mxGeometry x="1300" y="175" width="130" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="110" value="&#x1F3C6; LP = 100%&#xa;Request Sertifikat&#xa;Tersedia" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="10">
+      <mxGeometry x="1300" y="290" width="130" height="70" as="geometry" />
+    </mxCell>
+
+    <!-- Staff edges -->
+    <mxCell id="120" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="101" target="102" parent="10">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="121" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="102" target="103" parent="10">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="122" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="103" target="104" parent="10">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="123" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="106" target="107" parent="10">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="124" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="107" target="108" parent="10">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="125" value="jika LP = 100%" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="109" target="110" parent="10">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- SYSTEM nodes -->
+    <mxCell id="201" value="Cek Lock Modul&#xa;(UserProgress)" style="rhombus;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="20">
+      <mxGeometry x="670" y="65" width="150" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="202" value="Update UserProgress&#xa;+10 Poin (jika baru)&#xa;Update Streak&#xa;Recalculate LP %" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="20">
+      <mxGeometry x="1100" y="65" width="190" height="70" as="geometry" />
+    </mxCell>
+
+    <!-- System edges -->
+    <mxCell id="210" value="Unlocked" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="201" target="202" parent="20">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Cross-lane edges -->
+    <!-- Staff pilih modul → System cek lock -->
+    <mxCell id="301" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="104" target="201" parent="2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- System unlocked → Staff CourseLearn -->
+    <mxCell id="302" value="Unlocked" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="201" target="106" parent="2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- System locked → Staff info terkunci (dashed red) -->
+    <mxCell id="303" value="Locked" style="edgeStyle=orthogonalEdgeStyle;html=1;dashed=1;strokeColor=#b85450;" edge="1" source="201" target="105" parent="2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- Staff Mark Complete → System update -->
+    <mxCell id="304" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="108" target="202" parent="2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- System done → Staff LP progress -->
+    <mxCell id="305" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="202" target="109" parent="2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+  </root>
+</mxGraphModel>
