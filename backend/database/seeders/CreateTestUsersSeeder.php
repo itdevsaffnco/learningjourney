@@ -25,7 +25,7 @@ class CreateTestUsersSeeder extends Seeder
         User::create([
             'name' => 'Admin User',
             'email' => 'admin@saffnco.com',
-            'password' => bcrypt('password123'),
+            'password' => bcrypt('saffnco123'),
             'role_id' => $adminRole->id,
             'division_id' => $hqDiv->id,
             'email_verified_at' => now(),
@@ -35,7 +35,7 @@ class CreateTestUsersSeeder extends Seeder
         User::create([
             'name' => 'Trainer Sales',
             'email' => 'trainer@saffnco.com',
-            'password' => bcrypt('password123'),
+            'password' => bcrypt('saffnco123'),
             'role_id' => $trainerRole->id,
             'division_id' => $salesDiv->id,
             'email_verified_at' => now(),
@@ -45,15 +45,15 @@ class CreateTestUsersSeeder extends Seeder
         User::create([
             'name' => 'Staff User',
             'email' => 'staff@saffnco.com',
-            'password' => bcrypt('password123'),
+            'password' => bcrypt('saffnco123'),
             'role_id' => $staffRole->id,
             'division_id' => $salesDiv->id,
             'email_verified_at' => now(),
         ]);
 
         $this->command->info('✅ Test users created!');
-        $this->command->info('Staff: staff@saffnco.com / password123');
-        $this->command->info('Trainer: trainer@saffnco.com / password123');
-        $this->command->info('Admin: admin@saffnco.com / password123');
+        $this->command->info('Staff: staff@saffnco.com / saffnco123');
+        $this->command->info('Trainer: trainer@saffnco.com / saffnco123');
+        $this->command->info('Admin: admin@saffnco.com / saffnco123');
     }
 }
