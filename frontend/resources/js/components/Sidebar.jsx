@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import {
   Home, BookOpen, Trophy, FileText, CheckSquare, Gift,
   Medal, Bell, LogOut, Menu, X, Users, BarChart3,
-  Settings, Zap, Award, User
+  Award, User
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRole } from '../hooks/useRole'
@@ -18,12 +18,17 @@ export default function Sidebar({ user, mobileOpen = false, onMobileClose = () =
   const { isQuizActive } = useQuizLock()
 
   const adminMenuItems = [
-    { label: 'Dashboard', icon: Home, path: '/dashboard' },
+    { label: 'Dashboard', icon: Home, path: '/trainer/dashboard' },
+    { label: 'Modules', icon: BookOpen, path: '/trainer/modules' },
+    { label: 'Learning Paths', icon: FileText, path: '/trainer/learning-paths' },
+    { label: 'Quizzes', icon: CheckSquare, path: '/trainer/quizzes' },
+    { label: 'Assignments', icon: Medal, path: '/trainer/assignments' },
+    { label: 'Student Progress', icon: BarChart3, path: '/trainer/student-progress' },
+    { label: 'Certificate Requests', icon: Award, path: '/trainer/certificate-requests' },
+    { label: 'Leaderboard', icon: Trophy, path: '/leaderboard' },
+    { label: 'Announcements', icon: Bell, path: '/trainer/announcements' },
     { label: 'User Management', icon: Users, path: '/admin/users' },
-    { label: 'Divisions', icon: Zap, path: '/admin/divisions' },
-    { label: 'Content Review', icon: CheckSquare, path: '/admin/content' },
-    { label: 'Analytics', icon: BarChart3, path: '/admin/analytics' },
-    { label: 'Settings', icon: Settings, path: '/admin/settings' },
+    { label: 'Activity Logs', icon: BarChart3, path: '/trainer/logs' },
   ]
 
   const trainerMenuItems = [

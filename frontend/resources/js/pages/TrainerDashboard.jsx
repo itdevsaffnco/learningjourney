@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { Users, BookOpen, CheckSquare, Medal, FileText, TrendingUp, ArrowRight } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { useRole } from '../hooks/useRole'
 
 export default function TrainerDashboard({ user }) {
+  const { isAdmin } = useRole()
   const [stats, setStats] = useState({
     totalStaff: 0,
     totalModules: 0,
@@ -130,8 +132,8 @@ export default function TrainerDashboard({ user }) {
       {/* Header */}
       <div className="border-b border-gray-200 sticky top-0 z-10 bg-white">
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-8">
-          <h1 className="text-3xl font-bold text-slate-900">Trainer Dashboard</h1>
-          <p className="text-slate-600 mt-2 text-sm">Manage your learning content and track student progress</p>
+          <h1 className="text-3xl font-bold text-slate-900">{isAdmin() ? 'Admin Dashboard' : 'Trainer Dashboard'}</h1>
+          <p className="text-slate-600 mt-2 text-sm">{isAdmin() ? 'Platform overview — manage all learning content and users' : 'Manage your learning content and track student progress'}</p>
         </div>
       </div>
 
