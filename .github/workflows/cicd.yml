@@ -7,7 +7,6 @@ on:
 
 env:
   BACKEND_IMAGE: itsaffnco/saffnco_learning_backend_app
-  FRONTEND_IMAGE: itsaffnco/saffnco_learning_frontend_app
   NETWORK_NAME: learningjourney
 
 jobs:
@@ -40,41 +39,28 @@ jobs:
           cache-from: type=registry,ref=${{ env.BACKEND_IMAGE }}:latest
           cache-to: type=inline
 
-  # ─── BUILD FRONTEND ───────────────────────────────────────────────────────
-  build-frontend:
-    name: Build & Push Frontend
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Build & push frontend image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./frontend
-          file: ./frontend/Dockerfile
-          push: true
-          tags: |
-            ${{ env.FRONTEND_IMAGE }}:latest
-            ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
-          cache-from: type=registry,ref=${{ env.FRONTEND_IMAGE }}:latest
-          cache-to: type=inline
-
   # ─── DEPLOY ───────────────────────────────────────────────────────────────
   deploy:
     name: Deploy to Server
     runs-on: ubuntu-latest
-    needs: [build-backend, build-frontend]
+    needs: [build-backend]
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Copy only the files needed to build the frontend image on the server.
+      # This avoids pulling nginx:alpine on GitHub's shared runner IPs
+      # (which hits Docker Hub rate limits). The server caches the image.
+      - name: Copy frontend build artifacts to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          source: "frontend/public/dist,frontend/docker/nginx.conf,frontend/Dockerfile"
+          target: "$HOME/learningjourney/"
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         env:
@@ -92,7 +78,6 @@ jobs:
             set -e
 
             BACKEND_IMAGE="itsaffnco/saffnco_learning_backend_app:latest"
-            FRONTEND_IMAGE="itsaffnco/saffnco_learning_frontend_app:latest"
             NETWORK="learningjourney"
 
             echo "==> Login to Docker Hub"
@@ -130,23 +115,21 @@ jobs:
               $BACKEND_IMAGE
 
             # ── FRONTEND ─────────────────────────────────────────────────
-            echo "==> Stopping old frontend container..."
+            # Build image on the server — nginx:alpine gets pulled once and
+            # stays cached. No Docker Hub pull on GitHub Actions runner.
+            echo "==> Building frontend image on server..."
+            cd "$HOME/learningjourney/frontend"
+            docker build -t learningjourney_frontend_local:latest .
+
+            echo "==> Restarting frontend container..."
             docker stop learningjourney_frontend 2>/dev/null || true
             docker rm learningjourney_frontend 2>/dev/null || true
-
-            echo "==> Removing old frontend image..."
-            docker rmi $FRONTEND_IMAGE 2>/dev/null || true
-
-            echo "==> Pulling new frontend image..."
-            docker pull $FRONTEND_IMAGE
-
-            echo "==> Starting frontend container..."
             docker run -d \
               --name learningjourney_frontend \
               --network $NETWORK \
               -p 2013:80 \
               --restart unless-stopped \
-              $FRONTEND_IMAGE
+              learningjourney_frontend_local:latest
 
             echo "==> Cleaning up dangling images..."
             docker image prune -f
