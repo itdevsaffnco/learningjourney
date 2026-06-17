@@ -14,6 +14,7 @@ class Assignment extends Model
         'due_date',
         'max_score',
         'mc_weight',
+        'show_score_to_staff',
         'duration_minutes',
         'requires_camera',
         'requires_location',
@@ -25,6 +26,7 @@ class Assignment extends Model
         'due_date' => 'datetime',
         'requires_camera' => 'boolean',
         'requires_location' => 'boolean',
+        'show_score_to_staff' => 'boolean',
     ];
 
     public function module()

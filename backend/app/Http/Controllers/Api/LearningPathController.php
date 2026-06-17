@@ -56,9 +56,9 @@ class LearningPathController extends Controller
 
             $path = LearningPath::create([
                 'title' => $validated['title'],
-                'description' => $validated['description'] ?? null,
-                'target_division' => $validated['target_division'] ?? null,
-                'target_role' => $validated['target_role'] ?? null,
+                'description' => $validated['description'] ?: null,
+                'target_division' => $validated['target_division'] ?: null,
+                'target_role' => $validated['target_role'] ?: null,
                 'duration' => $validated['duration'] ?? 0,
                 'created_by' => auth()->id(),
                 'status' => 'draft',
@@ -179,27 +179,74 @@ class LearningPathController extends Controller
         }
     }
 
+    // Staff/User endpoint: Get single learning path with modules + completion status
+    public function userShow(string $id)
+    {
+        try {
+            $user = auth()->user();
+
+            $path = LearningPath::with(['modules.lessons'])
+                ->where('status', 'published')
+                ->findOrFail($id);
+
+            $formattedModules = [];
+            foreach ($path->modules as $idx => $module) {
+                $lessons = $module->lessons;
+                $totalLessons = $lessons->count();
+                $completedLessons = 0;
+
+                foreach ($lessons as $lesson) {
+                    $done = \App\Models\UserProgress::where('user_id', $user->id)
+                        ->where('lesson_id', $lesson->id)
+                        ->where('is_completed', true)
+                        ->exists();
+                    if ($done) $completedLessons++;
+                }
+
+                $formattedModules[] = [
+                    'id'                => $module->id,
+                    'stage'             => $idx + 1,
+                    'title'             => $module->title,
+                    'description'       => $module->description,
+                    'level'             => $module->level ?? 'Dasar',
+                    'duration'          => $module->duration ?? 0,
+                    'lessons'           => $totalLessons,
+                    'lessons_completed' => $completedLessons,
+                    'completed'         => $totalLessons > 0 && $completedLessons === $totalLessons,
+                    'progress'          => $totalLessons > 0 ? floor(($completedLessons / $totalLessons) * 100) : 0,
+                ];
+            }
+
+            return response()->json([
+                'path'    => [
+                    'id'          => $path->id,
+                    'title'       => $path->title,
+                    'description' => $path->description,
+                    'duration'    => $path->duration ?? 0,
+                ],
+                'modules' => $formattedModules,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Learning path not found'], 404);
+        }
+    }
+
     // Staff/User endpoint: Get learning paths they can access based on division/role
     public function userLearningPaths()
     {
         try {
             $user = auth()->user();
 
-            // Extract division and role names (handle both string and JSON formats)
-            $userDivision = is_array($user->division) ? ($user->division['name'] ?? null) : $user->division;
-            $userRole = is_array($user->role) ? ($user->role['name'] ?? null) : $user->role;
-
-            // Get all published learning paths for user's division or role created by trainers
+            // Return ALL published paths - no division filtering
             $paths = LearningPath::where('status', 'published')
-                ->whereHas('creator', fn($q) => $q->whereHas('role', fn($r) => $r->where('name', 'Trainer')))
-                ->where(function ($query) use ($userDivision, $userRole) {
-                    $query->whereNull('target_division')
-                        ->orWhere('target_division', $userDivision)
-                        ->orWhereNull('target_role')
-                        ->orWhere('target_role', $userRole);
-                })
                 ->with('modules')
                 ->get();
+
+            \Log::info('userLearningPaths', [
+                'user_id' => $user->id,
+                'total_published' => LearningPath::where('status', 'published')->count(),
+                'paths_returned' => $paths->count(),
+            ]);
 
             $formattedPaths = [];
             foreach ($paths as $path) {
@@ -249,14 +296,14 @@ class LearningPathController extends Controller
                 ];
             }
 
-            // Separate into categories based on progress (only include paths with actual progress)
+            // Separate into categories based on progress (include all assigned paths)
             $inProgress = [];
             $completed = [];
 
             foreach ($formattedPaths as $path) {
                 if ($path['progress'] >= 100) {
                     $completed[] = $path;
-                } elseif ($path['progress'] > 0) {
+                } else {
                     $inProgress[] = $path;
                 }
             }

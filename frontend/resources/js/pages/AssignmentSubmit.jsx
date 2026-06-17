@@ -351,6 +351,25 @@ export default function AssignmentSubmit() {
           </div>
         </motion.div>
 
+        {/* Score — only shown when trainer has enabled show_score_to_staff */}
+        {isReadOnly && assignment?.show_score_to_staff && existingSubmission?.status === 'graded' && existingSubmission?.score !== null && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="border border-green-200 rounded-lg bg-green-50 p-6 mb-8 shadow-sm flex items-center justify-between"
+          >
+            <div>
+              <p className="text-sm font-semibold text-green-800 mb-0.5">Your Score</p>
+              <p className="text-xs text-green-600">Graded by trainer</p>
+            </div>
+            <div className="text-right">
+              <p className="text-4xl font-bold text-green-700">{existingSubmission.score}</p>
+              <p className="text-sm text-green-600">/ {assignment.max_score || 100}</p>
+            </div>
+          </motion.div>
+        )}
+
         {/* Questions */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

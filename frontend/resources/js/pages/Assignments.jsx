@@ -103,9 +103,13 @@ export default function Assignments() {
       case 'not-started':
         return { color: 'bg-gray-100 text-gray-700', icon: AlertCircle, label: 'Not Started' }
       case 'submitted':
-        return { color: 'bg-green-100 text-green-700', icon: CheckCircle2, label: 'Submitted' }
+        return { color: 'bg-blue-100 text-blue-700', icon: CheckCircle2, label: 'Submitted' }
+      case 'graded':
+        return { color: 'bg-green-100 text-green-700', icon: CheckCircle2, label: 'Graded' }
+      case 'in-progress':
+        return { color: 'bg-yellow-100 text-yellow-700', icon: Clock, label: 'In Progress' }
       default:
-        return { color: 'bg-gray-100 text-gray-700', icon: FileText, label: 'Unknown' }
+        return { color: 'bg-gray-100 text-gray-700', icon: FileText, label: 'Not Started' }
     }
   }
 
@@ -216,13 +220,13 @@ export default function Assignments() {
                     <button
                       onClick={() => navigate(`/assignments/${assignment.id}`)}
                       className={`ml-4 flex items-center gap-2 px-6 py-2 rounded-lg font-semibold transition-colors flex-shrink-0 ${
-                        assignment.status === 'submitted'
+                        assignment.status === 'submitted' || assignment.status === 'graded'
                           ? 'bg-gray-100 text-slate-600 hover:bg-gray-200'
                           : 'bg-slate-700 hover:bg-slate-800 text-white'
                       }`}
                     >
                       <Send size={16} />
-                      {assignment.status === 'submitted' ? 'View' : 'Start'}
+                      {assignment.status === 'submitted' || assignment.status === 'graded' ? 'View' : 'Start'}
                     </button>
                   </div>
                 </motion.div>

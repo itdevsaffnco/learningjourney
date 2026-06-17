@@ -86,12 +86,116 @@ class UserController extends Controller
     public function certificates(Request $request)
     {
         $user = $request->user();
+        // course_id stores learning_path_id for path-based certificates
         $certificates = Certificate::where('user_id', $user->id)
-            ->where('status', 'issued')
-            ->with('course')
-            ->get();
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function ($cert) {
+                $path = \App\Models\LearningPath::find($cert->course_id);
+                return [
+                    'id'                  => $cert->id,
+                    'certificate_number'  => $cert->certificate_number,
+                    'status'              => $cert->status,
+                    'issued_date'         => $cert->issued_date,
+                    'created_at'          => $cert->created_at,
+                    'learning_path_id'    => $cert->course_id,
+                    'learning_path_title' => $path?->title ?? 'Unknown Path',
+                ];
+            });
 
         return response()->json($certificates);
+    }
+
+    public function requestCertificate(Request $request)
+    {
+        $validated = $request->validate([
+            'learning_path_id' => 'required|exists:learning_paths,id',
+        ]);
+
+        $user = $request->user();
+        $pathId = $validated['learning_path_id'];
+
+        // Verify the learning path is fully completed
+        $path = \App\Models\LearningPath::with('modules.lessons')->findOrFail($pathId);
+
+        $totalLessons = 0;
+        $completedLessons = 0;
+        foreach ($path->modules as $module) {
+            foreach ($module->lessons as $lesson) {
+                $totalLessons++;
+                $done = \App\Models\UserProgress::where('user_id', $user->id)
+                    ->where('lesson_id', $lesson->id)
+                    ->where('is_completed', true)
+                    ->exists();
+                if ($done) $completedLessons++;
+            }
+        }
+
+        if ($totalLessons === 0 || $completedLessons < $totalLessons) {
+            return response()->json(['message' => 'Selesaikan semua modul learning path terlebih dahulu'], 422);
+        }
+
+        $existing = Certificate::where('user_id', $user->id)
+            ->where('course_id', $pathId)
+            ->first();
+
+        if ($existing) {
+            return response()->json(['message' => 'Request sudah ada', 'certificate' => $existing], 422);
+        }
+
+        $certificate = Certificate::create([
+            'user_id'            => $user->id,
+            'course_id'          => $pathId,
+            'certificate_number' => 'CERT-' . strtoupper(substr(md5($user->id . '-LP-' . $pathId . '-' . time()), 0, 8)),
+            'issued_date'        => now(),
+            'status'             => 'pending',
+        ]);
+
+        return response()->json([
+            'message'     => 'Request berhasil dikirim',
+            'certificate' => $certificate,
+        ], 201);
+    }
+
+    public function certificateRequests(Request $request)
+    {
+        $status = $request->query('status', 'pending');
+
+        $certificates = Certificate::where('status', $status)
+            ->with('user.division')
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function ($cert) {
+                $path = \App\Models\LearningPath::find($cert->course_id);
+                return [
+                    'id'                  => $cert->id,
+                    'certificate_number'  => $cert->certificate_number,
+                    'status'              => $cert->status,
+                    'issued_date'         => $cert->issued_date,
+                    'created_at'          => $cert->created_at,
+                    'learning_path_title' => $path?->title ?? 'Unknown Path',
+                    'user_name'           => $cert->user->name,
+                    'user_division'       => $cert->user->division?->name ?? '-',
+                ];
+            });
+
+        return response()->json(['requests' => $certificates]);
+    }
+
+    public function approveCertificate(Request $request, $id)
+    {
+        $cert = Certificate::findOrFail($id);
+        $cert->update(['status' => 'issued', 'issued_date' => now()]);
+
+        return response()->json(['message' => 'Sertifikat disetujui', 'certificate' => $cert]);
+    }
+
+    public function rejectCertificate(Request $request, $id)
+    {
+        $cert = Certificate::findOrFail($id);
+        $cert->update(['status' => 'rejected']);
+
+        return response()->json(['message' => 'Sertifikat ditolak', 'certificate' => $cert]);
     }
 
     public function rewards(Request $request)
@@ -147,7 +251,7 @@ class UserController extends Controller
         $user = $request->user()->load(['division', 'points', 'progress']);
 
         $completedLessons = $user->progress->where('is_completed', true)->count();
-        $totalLessons = $user->progress->count();
+        $totalLessons = \App\Models\Lesson::whereHas('module', fn($q) => $q->where('status', 'published'))->count();
 
         return response()->json([
             'user' => [
@@ -156,10 +260,10 @@ class UserController extends Controller
                 'avatar_url' => $user->avatar_url,
             ],
             'stats' => [
-                'total_points' => $user->points?->total_points ?? 0,
-                'daily_streak' => $user->points?->daily_streak ?? 0,
-                'lessons_completed' => $completedLessons,
-                'total_lessons' => $totalLessons,
+                'total_points'         => $user->points?->total_points ?? 0,
+                'daily_streak'         => $user->points?->daily_streak ?? 0,
+                'lessons_completed'    => $completedLessons,
+                'total_lessons'        => $totalLessons,
                 'completion_percentage' => $totalLessons > 0 ? round(($completedLessons / $totalLessons) * 100) : 0,
             ],
         ]);
@@ -391,6 +495,8 @@ class UserController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
         ]);
 
         $announcement = \App\Models\Announcement::create([
@@ -417,6 +523,8 @@ class UserController extends Controller
         $validated = $request->validate([
             'title' => 'string|max:255',
             'content' => 'string',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
         ]);
 
         $announcement->update($validated);

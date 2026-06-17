@@ -28,6 +28,7 @@ const LearnLesson = lazy(() => import('./pages/LearnLesson'))
 const Courses = lazy(() => import('./pages/Courses'))
 const AssignmentsPage = lazy(() => import('./pages/Assignments'))
 const Certificates = lazy(() => import('./pages/Certificates'))
+const CertificateRequests = lazy(() => import('./pages/CertificateRequests'))
 const CourseLearn = lazy(() => import('./pages/CourseLearn'))
 const AnnouncementsPage = lazy(() => import('./pages/Announcements'))
 
@@ -115,6 +116,7 @@ export default function App() {
             <Route path="/trainer/student-progress" element={<StudentProgress user={user} />} />
             <Route path="/trainer/student-progress/:studentId" element={<StudentProgressDetail user={user} />} />
             <Route path="/trainer/announcements" element={<Announcements user={user} />} />
+            <Route path="/trainer/certificate-requests" element={<CertificateRequests user={user} />} />
             <Route path="/admin/users" element={<UserManagement user={user} />} />
             <Route path="/trainer/logs" element={<ActivityLogs user={user} />} />
             <Route path="/leaderboard" element={<Leaderboard user={user} />} />

@@ -37,7 +37,13 @@ class AssignmentController extends Controller
 
                 $status = 'not-started';
                 if ($submission) {
-                    $status = $submission->status === 'submitted' || $submission->status === 'late' ? 'submitted' : 'in-progress';
+                    if ($submission->status === 'graded') {
+                        $status = 'graded';
+                    } elseif ($submission->status === 'submitted' || $submission->status === 'late') {
+                        $status = 'submitted';
+                    } else {
+                        $status = 'in-progress';
+                    }
                 }
 
                 $formattedAssignments[] = [
@@ -320,6 +326,7 @@ class AssignmentController extends Controller
                 'duration_minutes' => 'nullable|integer|min:1',
                 'requires_camera' => 'nullable|boolean',
                 'requires_location' => 'nullable|boolean',
+                'show_score_to_staff' => 'nullable|boolean',
                 'status' => 'nullable|in:draft,published,closed,archived',
             ]);
 

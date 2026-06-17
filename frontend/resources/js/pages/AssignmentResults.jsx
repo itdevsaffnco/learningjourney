@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Eye, X, CheckCircle, XCircle, Star, RotateCcw } from 'lucide-react'
+import { ArrowLeft, Eye, X, CheckCircle, XCircle, Star, RotateCcw, ToggleLeft, ToggleRight } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import axios from 'axios'
 
@@ -24,6 +24,9 @@ export default function AssignmentResults() {
   const [essayScores, setEssayScores] = useState({})
   const [gradeFeedback, setGradeFeedback] = useState('')
   const [gradeSubmitting, setGradeSubmitting] = useState(false)
+
+  // Show score toggle
+  const [toggleLoading, setToggleLoading] = useState(false)
 
   useEffect(() => {
     fetchData()
@@ -95,6 +98,23 @@ export default function AssignmentResults() {
       console.error('Remedial failed:', e)
     } finally {
       setRemedialLoading(false)
+    }
+  }
+
+  const toggleShowScore = async () => {
+    if (toggleLoading) return
+    setToggleLoading(true)
+    try {
+      const token = localStorage.getItem('token')
+      const newValue = !assignment.show_score_to_staff
+      await axios.put(`/api/trainer/assignments/${assignmentId}`, {
+        show_score_to_staff: newValue,
+      }, { headers: { Authorization: `Bearer ${token}` } })
+      setAssignment(prev => ({ ...prev, show_score_to_staff: newValue }))
+    } catch (e) {
+      console.error('Toggle failed:', e)
+    } finally {
+      setToggleLoading(false)
     }
   }
 
@@ -177,6 +197,31 @@ export default function AssignmentResults() {
                 <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
               </div>
             ))}
+          </div>
+
+          {/* Show score toggle */}
+          <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
+            <div>
+              <p className="font-semibold text-slate-900 text-sm">Show Score to Staff</p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {assignment?.show_score_to_staff
+                  ? 'Staff can see their score on this assignment'
+                  : 'Score is hidden from staff'}
+              </p>
+            </div>
+            <button
+              onClick={toggleShowScore}
+              disabled={toggleLoading}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-colors disabled:opacity-60 ${
+                assignment?.show_score_to_staff
+                  ? 'bg-teal-50 text-teal-700 border border-teal-200 hover:bg-teal-100'
+                  : 'bg-gray-100 text-slate-600 border border-gray-200 hover:bg-gray-200'
+              }`}
+            >
+              {assignment?.show_score_to_staff
+                ? <><ToggleRight size={20} className="text-teal-600" /> Visible</>
+                : <><ToggleLeft size={20} /> Hidden</>}
+            </button>
           </div>
         </motion.div>
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Trash2, BookOpen, Clock, ArrowRight, Search, X } from 'lucide-react'
+import { Plus, Trash2, BookOpen, Clock, ArrowRight, Search, X, Eye, EyeOff } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import axios from 'axios'
 
@@ -105,6 +105,22 @@ export default function LearningPathManager() {
       console.error('Error creating path:', error.response?.data || error.message)
       const errorMsg = error.response?.data?.message || error.response?.data?.errors || 'Failed to create learning path'
       alert('Error: ' + (typeof errorMsg === 'object' ? JSON.stringify(errorMsg) : errorMsg))
+    }
+  }
+
+  const handleTogglePublish = async (path) => {
+    const newStatus = path.status === 'published' ? 'draft' : 'published'
+    try {
+      const token = localStorage.getItem('token')
+      const res = await axios.put(`/api/trainer/learning-paths/${path.id}`, { status: newStatus }, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      console.log('Publish response:', res.data)
+      // Only update UI after backend confirms
+      setPaths(prev => prev.map(p => p.id === path.id ? { ...p, status: res.data.path?.status ?? newStatus } : p))
+    } catch (error) {
+      console.error('Failed to update status:', error.response?.data || error.message)
+      alert('Gagal mengubah status: ' + (error.response?.data?.message || error.message))
     }
   }
 
@@ -332,7 +348,16 @@ export default function LearningPathManager() {
                 <div className="p-6 flex flex-col flex-1">
                   {/* Title and Info */}
                   <div className="mb-5">
-                    <h3 className="font-bold text-lg text-slate-900 leading-tight mb-2">{path.title}</h3>
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <h3 className="font-bold text-lg text-slate-900 leading-tight">{path.title}</h3>
+                      <span className={`flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-semibold ${
+                        path.status === 'published'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-yellow-100 text-yellow-700'
+                      }`}>
+                        {path.status === 'published' ? 'Published' : 'Draft'}
+                      </span>
+                    </div>
                     <p className="text-sm text-slate-600 line-clamp-2">{path.description}</p>
                   </div>
 
@@ -367,13 +392,26 @@ export default function LearningPathManager() {
                       View & Manage
                       <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
                     </button>
-                    <button
-                      onClick={() => setDeleteModal({ show: true, pathId: path.id, pathName: path.title })}
-                      className="w-full py-2 border border-gray-200 text-slate-700 font-medium rounded-lg hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center gap-2"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      Delete
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleTogglePublish(path)}
+                        className={`flex-1 py-2 border font-medium rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 text-sm ${
+                          path.status === 'published'
+                            ? 'border-green-200 text-green-700 hover:bg-green-50'
+                            : 'border-teal-200 text-teal-700 hover:bg-teal-50'
+                        }`}
+                      >
+                        {path.status === 'published'
+                          ? <><EyeOff className="w-4 h-4" /> Unpublish</>
+                          : <><Eye className="w-4 h-4" /> Publish</>}
+                      </button>
+                      <button
+                        onClick={() => setDeleteModal({ show: true, pathId: path.id, pathName: path.title })}
+                        className="py-2 px-3 border border-gray-200 text-slate-500 rounded-lg hover:bg-gray-50 hover:text-red-600 hover:border-red-200 transition-colors duration-200"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </motion.div>

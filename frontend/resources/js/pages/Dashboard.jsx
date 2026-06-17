@@ -4,10 +4,14 @@ import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useRole } from '../hooks/useRole'
 import TrainerDashboard from './TrainerDashboard'
+import axios from 'axios'
 
 export default function Dashboard({ user }) {
   const { isAdmin, isTrainer, isStaff } = useRole()
   const [dashboardData, setDashboardData] = useState(null)
+  const [assignments, setAssignments] = useState([])
+  const [certificates, setCertificates] = useState([])
+  const [courses, setCourses] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -17,13 +21,17 @@ export default function Dashboard({ user }) {
   const fetchDashboardData = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch('/api/dashboard', {
-        headers: { 'Authorization': `Bearer ${token}` },
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setDashboardData(data)
-      }
+      const headers = { Authorization: `Bearer ${token}` }
+      const [dashRes, assignRes, certRes, courseRes] = await Promise.all([
+        fetch('/api/dashboard', { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
+        axios.get('/api/assignments', { headers }).catch(() => ({ data: { assignments: [] } })),
+        axios.get('/api/certificates', { headers }).catch(() => ({ data: [] })),
+        axios.get('/api/courses', { headers }).catch(() => ({ data: { courses: [] } })),
+      ])
+      setDashboardData(dashRes)
+      setAssignments(assignRes.data?.assignments || [])
+      setCertificates(certRes.data || [])
+      setCourses(courseRes.data?.courses || [])
     } catch (error) {
       console.error('Failed to fetch dashboard:', error)
     } finally {
@@ -155,15 +163,9 @@ export default function Dashboard({ user }) {
   // Staff Dashboard (Default)
   const navigate = useNavigate()
 
-  const upcomingAssignments = [
-    { id: 1, title: 'Product Knowledge Assessment', dueDate: '2026-06-25', daysLeft: 13 },
-    { id: 2, title: 'Sales Pitch Development', dueDate: '2026-06-20', daysLeft: 8 }
-  ]
-
-  const recentCertificates = [
-    { id: 1, name: 'Backend Developer Certification', pathName: 'Backend Developer', earnedDate: '2024-12-15' },
-    { id: 2, name: 'Frontend Developer Certification', pathName: 'Frontend Developer', earnedDate: '2024-11-20' }
-  ]
+  const upcomingAssignments = assignments.filter(a => a.status === 'not-started').slice(0, 3)
+  const issuedCertificates = certificates.filter(c => c.status === 'issued')
+  const recommendedCourses = courses.filter(c => c.progress < 100).slice(0, 3)
 
   return (
     <main className="flex-1 overflow-y-auto bg-white">
@@ -250,7 +252,7 @@ export default function Dashboard({ user }) {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-slate-600 text-sm font-medium">Sertifikat</p>
-                <p className="text-3xl font-bold text-slate-900 mt-2">{recentCertificates.length}</p>
+                <p className="text-3xl font-bold text-slate-900 mt-2">{issuedCertificates.length}</p>
               </div>
               <div className="p-3 bg-gray-100 rounded-lg">
                 <Trophy className="w-6 h-6 text-amber-600" />
@@ -295,22 +297,31 @@ export default function Dashboard({ user }) {
             </div>
             <div className="space-y-3">
               {upcomingAssignments.length > 0 ? (
-                upcomingAssignments.map((assignment, idx) => (
-                  <motion.div
-                    key={assignment.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.1 }}
-                    className="flex items-center gap-3 p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <Send className="w-5 h-5 text-teal-600 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-900">{assignment.title}</p>
-                      <p className="text-xs text-slate-600">Jatuh tempo: {assignment.daysLeft} hari</p>
-                    </div>
-                    <button onClick={() => navigate('/assignments')} className="text-xs font-bold text-teal-600 hover:text-teal-700">Mulai</button>
-                  </motion.div>
-                ))
+                upcomingAssignments.map((assignment, idx) => {
+                  const daysLeft = assignment.due_date
+                    ? Math.ceil((new Date(assignment.due_date) - new Date()) / (1000 * 60 * 60 * 24))
+                    : null
+                  return (
+                    <motion.div
+                      key={assignment.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.1 }}
+                      className="flex items-center gap-3 p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <Send className="w-5 h-5 text-teal-600 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-slate-900 truncate">{assignment.title}</p>
+                        <p className="text-xs text-slate-600">
+                          {daysLeft != null
+                            ? daysLeft > 0 ? `Jatuh tempo: ${daysLeft} hari lagi` : 'Sudah jatuh tempo'
+                            : 'Tanpa batas waktu'}
+                        </p>
+                      </div>
+                      <button onClick={() => navigate('/assignments')} className="text-xs font-bold text-teal-600 hover:text-teal-700 flex-shrink-0">Mulai</button>
+                    </motion.div>
+                  )
+                })
               ) : (
                 <p className="text-sm text-slate-600 text-center py-4">Tidak ada tugas mendatang</p>
               )}
@@ -329,8 +340,8 @@ export default function Dashboard({ user }) {
               <button onClick={() => navigate('/certificates')} className="text-xs font-bold text-teal-600 hover:text-teal-700">Lihat Semua →</button>
             </div>
             <div className="space-y-3">
-              {recentCertificates.length > 0 ? (
-                recentCertificates.map((cert, idx) => (
+              {issuedCertificates.length > 0 ? (
+                issuedCertificates.slice(0, 3).map((cert, idx) => (
                   <motion.div
                     key={cert.id}
                     initial={{ opacity: 0, x: -20 }}
@@ -340,10 +351,10 @@ export default function Dashboard({ user }) {
                   >
                     <Trophy className="w-5 h-5 text-amber-600 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-900">{cert.name}</p>
-                      <p className="text-xs text-slate-600">{cert.pathName}</p>
+                      <p className="text-sm font-semibold text-slate-900 truncate">{cert.learning_path_title}</p>
+                      <p className="text-xs text-slate-600 font-mono">{cert.certificate_number}</p>
                     </div>
-                    <button onClick={() => navigate('/certificates')} className="text-xs font-bold text-teal-600 hover:text-teal-700">Lihat</button>
+                    <button onClick={() => navigate('/certificates')} className="text-xs font-bold text-teal-600 hover:text-teal-700 flex-shrink-0">Lihat</button>
                   </motion.div>
                 ))
               ) : (
@@ -366,40 +377,54 @@ export default function Dashboard({ user }) {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              { title: 'Advanced Fragrance Blending', description: 'Master advanced blending techniques', rating: 4.9, instructor: 'Rina Wijaya' },
-              { title: 'Digital Marketing Mastery', description: 'Comprehensive digital marketing strategies', rating: 4.8, instructor: 'Ahmad Gunawan' },
-              { title: 'Customer Excellence', description: 'Deliver exceptional customer experiences', rating: 4.7, instructor: 'Siti Nur Aini' }
-            ].map((course, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 + idx * 0.05 }}
-                className="border border-gray-200 rounded-lg overflow-hidden bg-white group cursor-pointer hover:shadow-md transition-all"
-                onClick={() => navigate('/courses')}
-              >
-                <div className="h-40 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-400 text-4xl">
-                  📚
-                </div>
-                <div className="p-5">
-                  <h3 className="font-bold text-slate-900 group-hover:text-slate-700 transition-colors line-clamp-2">{course.title}</h3>
-                  <p className="text-sm text-slate-600 mt-2 line-clamp-2">{course.description}</p>
-                  <p className="text-xs text-slate-500 mt-2">Oleh {course.instructor}</p>
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
-                    <div className="flex items-center gap-1">
-                      <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                      <span className="text-xs font-medium text-slate-700">{course.rating}</span>
-                    </div>
-                    <button className="text-slate-600 hover:text-slate-900 font-medium text-xs">
-                      Mulai →
-                    </button>
+          {recommendedCourses.length === 0 ? (
+            <div className="text-center py-10 border border-dashed border-gray-200 rounded-xl">
+              <BookOpen className="w-10 h-10 mx-auto text-slate-300 mb-3" />
+              <p className="text-slate-500 text-sm">Semua kursus sudah selesai — kerja bagus!</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {recommendedCourses.map((course, idx) => (
+                <motion.div
+                  key={course.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 + idx * 0.05 }}
+                  className="border border-gray-200 rounded-lg overflow-hidden bg-white group cursor-pointer hover:shadow-md transition-all"
+                  onClick={() => navigate(`/courses/${course.id}`)}
+                >
+                  <div className="h-36 bg-gradient-to-br from-teal-50 to-slate-100 flex items-center justify-center">
+                    <BookOpen className="w-10 h-10 text-teal-400 opacity-60" />
                   </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                  <div className="p-5">
+                    <h3 className="font-bold text-slate-900 group-hover:text-teal-700 transition-colors line-clamp-2">{course.title}</h3>
+                    {course.description && (
+                      <p className="text-sm text-slate-500 mt-1.5 line-clamp-2">{course.description}</p>
+                    )}
+                    <p className="text-xs text-slate-400 mt-1">Oleh {course.instructor}</p>
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                      {course.progress > 0 ? (
+                        <div>
+                          <div className="flex justify-between text-xs text-slate-500 mb-1">
+                            <span>{course.difficulty}</span>
+                            <span>{course.progress}%</span>
+                          </div>
+                          <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-teal-400 rounded-full" style={{ width: `${course.progress}%` }} />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-slate-400 capitalize">{course.difficulty} · {course.lessons_count} lessons</span>
+                          <span className="text-xs font-bold text-teal-600">Mulai →</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </motion.div>
       </div>
     </main>

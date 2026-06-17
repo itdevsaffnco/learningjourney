@@ -11,6 +11,9 @@ export default function Leaderboard() {
   const [activeTab, setActiveTab] = useState('points')
   const [loading, setLoading] = useState(true)
 
+  const user = (() => { try { return JSON.parse(localStorage.getItem('user') || '{}') } catch { return {} } })()
+  const isTrainer = user?.role === 'Trainer' || user?.role?.name === 'Trainer'
+
   useEffect(() => {
     fetchData()
   }, [activeTab])
@@ -47,7 +50,7 @@ export default function Leaderboard() {
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => navigate('/trainer/dashboard')}
+              onClick={() => navigate(isTrainer ? '/trainer/dashboard' : '/dashboard')}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <ArrowLeft size={24} className="text-slate-900" />

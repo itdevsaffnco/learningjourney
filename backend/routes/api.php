@@ -34,6 +34,7 @@ Route::middleware('api')->group(function () {
         Route::post('/change-password', [UserController::class, 'changePassword']);
         Route::get('/points', [UserController::class, 'points']);
         Route::get('/certificates', [UserController::class, 'certificates']);
+        Route::post('/certificates/request', [UserController::class, 'requestCertificate']);
         Route::get('/rewards', [UserController::class, 'rewards']);
         Route::post('/rewards/{id}/redeem', [UserController::class, 'redeemReward']);
         Route::get('/dashboard', [UserController::class, 'dashboard']);
@@ -56,6 +57,7 @@ Route::middleware('api')->group(function () {
 
         // User Learning Paths (Staff can view their enrolled paths)
         Route::get('/user/learning-paths', [LearningPathController::class, 'userLearningPaths']);
+        Route::get('/user/learning-paths/{id}', [LearningPathController::class, 'userShow']);
 
         // View Quizzes & Assignments
         Route::get('/quizzes', [QuizController::class, 'index']);
@@ -164,6 +166,11 @@ Route::middleware('api')->group(function () {
             Route::post('/announcements', [UserController::class, 'createAnnouncement']);
             Route::put('/announcements/{id}', [UserController::class, 'updateAnnouncement']);
             Route::delete('/announcements/{id}', [UserController::class, 'deleteAnnouncement']);
+
+            // Certificate Requests
+            Route::get('/trainer/certificate-requests', [UserController::class, 'certificateRequests']);
+            Route::put('/trainer/certificate-requests/{id}/approve', [UserController::class, 'approveCertificate']);
+            Route::put('/trainer/certificate-requests/{id}/reject', [UserController::class, 'rejectCertificate']);
         });
 
         // === ADMIN ONLY ROUTES ===

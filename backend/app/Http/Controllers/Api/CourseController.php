@@ -187,71 +187,48 @@ class CourseController extends Controller
             'is_completed' => 'boolean',
         ]);
 
+        // Fetch existing record first so we can accumulate time and check prior completion
+        $existing = UserProgress::where('user_id', $user->id)->where('lesson_id', $id)->first();
+        $wasAlreadyCompleted = $existing?->is_completed ?? false;
+
         $progress = UserProgress::updateOrCreate(
             ['user_id' => $user->id, 'lesson_id' => $id],
             [
                 'progress_percentage' => $validated['progress_percentage'] ?? 0,
-                'time_spent_minutes' => ($progress->time_spent_minutes ?? 0) + ($validated['time_spent_minutes'] ?? 0),
-                'is_completed' => $validated['is_completed'] ?? false,
-                'completed_at' => $validated['is_completed'] ? now() : null,
-                'started_at' => now(),
+                'time_spent_minutes'  => ($existing?->time_spent_minutes ?? 0) + ($validated['time_spent_minutes'] ?? 0),
+                'is_completed'        => $validated['is_completed'] ?? false,
+                'completed_at'        => ($validated['is_completed'] ?? false) ? now() : null,
+                'started_at'          => $existing?->started_at ?? now(),
             ]
         );
 
-        if ($validated['is_completed']) {
+        // Award 10 points only on first completion — never double-count
+        if (($validated['is_completed'] ?? false) && !$wasAlreadyCompleted) {
             $points = \App\Models\Points::firstOrCreate(
                 ['user_id' => $user->id],
-                ['total_points' => 0]
+                ['total_points' => 0, 'quiz_points' => 0, 'assignment_points' => 0, 'streak_bonus' => 0, 'daily_streak' => 0]
             );
             $points->increment('total_points', 10);
 
-            $today = now()->toDateString();
+            $today        = now()->toDateString();
             $lastActivity = $points->last_activity_date ? $points->last_activity_date->toDateString() : null;
+
             if ($lastActivity === $today) {
                 $currentStreak = $points->daily_streak;
             } else {
-                $currentStreak = $lastActivity === now()->subDay()->toDateString() ? $points->daily_streak + 1 : 1;
+                $currentStreak = ($lastActivity === now()->subDay()->toDateString())
+                    ? $points->daily_streak + 1
+                    : 1;
                 if ($currentStreak > 1) {
                     $points->increment('streak_bonus', 5);
                     $points->increment('total_points', 5);
                 }
             }
 
-            $points->update([
-                'daily_streak' => $currentStreak,
-                'last_activity_date' => now(),
-            ]);
-
-            $module = $lesson->module;
-            if ($module) {
-                $course = $module->course;
-                if ($course) {
-                    $totalLessons = $course->modules->sum(function ($mod) {
-                        return $mod->lessons->count();
-                    });
-
-                    $completedLessons = UserProgress::where('user_id', $user->id)
-                        ->whereHas('lesson', fn($q) => $q->whereHas('module', fn($m) => $m->where('course_id', $course->id)))
-                        ->where('is_completed', true)
-                        ->count();
-
-                    if ($totalLessons > 0 && $completedLessons === $totalLessons) {
-                        $existingCertificate = \App\Models\Certificate::where('user_id', $user->id)
-                            ->where('course_id', $course->id)
-                            ->first();
-
-                        if (!$existingCertificate) {
-                            \App\Models\Certificate::create([
-                                'user_id' => $user->id,
-                                'course_id' => $course->id,
-                                'certificate_number' => 'CERT-' . $user->id . '-' . $course->id . '-' . time(),
-                                'issued_date' => now(),
-                                'status' => 'issued',
-                            ]);
-                        }
-                    }
-                }
-            }
+            $points->forceFill([
+                'daily_streak'       => $currentStreak,
+                'last_activity_date' => now()->toDateString(),
+            ])->save();
         }
 
         return response()->json($progress);

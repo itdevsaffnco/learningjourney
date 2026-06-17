@@ -226,15 +226,7 @@ export default function Login({ onLogin }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className="mt-8 pt-8 border-t border-gray-200"
             >
-              <p className="text-center text-slate-600 text-xs mb-3">Demo Account:</p>
-              <div className="text-center">
-                <p className="text-slate-900 font-medium">admin@saffnco.com</p>
-                <p className="text-slate-600 text-sm">trainer@saffnco.com</p>
-                <p className="text-slate-600 text-sm">staff@saffnco.com</p>
-              </div>
-              <p className="text-center text-slate-600 text-xs mt-2">Password: password</p>
             </motion.div>
           </motion.div>
         </div>

@@ -120,8 +120,10 @@ function Toolbar({ editor }) {
 }
 
 // ── Form modal with its own editor instance ───────────────────────────────────
-function AnnouncementFormModal({ editingId, initialTitle, initialContent, onSave, onClose, saving }) {
+function AnnouncementFormModal({ editingId, initialTitle, initialContent, initialStartDate, initialEndDate, onSave, onClose, saving }) {
   const [title, setTitle] = useState(initialTitle || '')
+  const [startDate, setStartDate] = useState(initialStartDate || '')
+  const [endDate, setEndDate] = useState(initialEndDate || '')
 
   const editor = useEditor({
     extensions: [
@@ -141,7 +143,7 @@ function AnnouncementFormModal({ editingId, initialTitle, initialContent, onSave
     if (!title.trim()) return
     const html = editor?.getHTML() || ''
     if (html === '<p></p>' || !html.trim()) return
-    onSave({ title, content: html })
+    onSave({ title, content: html, start_date: startDate || null, end_date: endDate || null })
   }
 
   return (
@@ -180,12 +182,37 @@ function AnnouncementFormModal({ editingId, initialTitle, initialContent, onSave
                 />
               </div>
 
+              {/* Date range */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-900 mb-2">Start Date</label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={e => setStartDate(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-1 focus:ring-slate-700 focus:border-slate-700 focus:outline-none text-slate-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-900 mb-2">End Date</label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    min={startDate || undefined}
+                    onChange={e => setEndDate(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-1 focus:ring-slate-700 focus:border-slate-700 focus:outline-none text-slate-900"
+                  />
+                </div>
+              </div>
+
               {/* Rich text content */}
               <div>
                 <label className="block text-sm font-semibold text-slate-900 mb-2">Content</label>
                 <div className="border border-gray-200 rounded-lg overflow-hidden">
                   <Toolbar editor={editor} />
-                  <EditorContent editor={editor} />
+                  <div className="resize-y overflow-auto min-h-[180px]">
+                    <EditorContent editor={editor} />
+                  </div>
                 </div>
               </div>
             </div>
@@ -244,18 +271,19 @@ export default function Announcements() {
     setTimeout(() => setMessage({ show: false, type: 'success', text: '' }), 2500)
   }
 
-  const handleSave = async ({ title, content }) => {
+  const handleSave = async ({ title, content, start_date, end_date }) => {
     setSaving(true)
     try {
       const token = localStorage.getItem('token')
+      const payload = { title, content, start_date: start_date || null, end_date: end_date || null }
       if (modalState?.editingId) {
-        const res = await axios.put(`/api/announcements/${modalState.editingId}`, { title, content }, {
+        const res = await axios.put(`/api/announcements/${modalState.editingId}`, payload, {
           headers: { Authorization: `Bearer ${token}` },
         })
         setAnnouncements(prev => prev.map(a => a.id === modalState.editingId ? res.data.announcement : a))
         showMsg('success', 'Announcement updated!')
       } else {
-        const res = await axios.post('/api/announcements', { title, content }, {
+        const res = await axios.post('/api/announcements', payload, {
           headers: { Authorization: `Bearer ${token}` },
         })
         setAnnouncements(prev => [res.data.announcement, ...prev])
@@ -305,7 +333,7 @@ export default function Announcements() {
           </div>
           {isTrainer && (
             <button
-              onClick={() => setModalState({ editingId: null, title: '', content: '' })}
+              onClick={() => setModalState({ editingId: null, title: '', content: '', start_date: '', end_date: '' })}
               className="flex items-center gap-2 px-5 py-2.5 bg-slate-700 hover:bg-slate-800 text-white rounded-lg font-semibold transition-colors"
             >
               <Plus size={18} />
@@ -348,7 +376,7 @@ export default function Announcements() {
                   {isTrainer && (
                     <div className="flex items-center gap-1 shrink-0">
                       <button
-                        onClick={() => setModalState({ editingId: ann.id, title: ann.title, content: ann.content })}
+                        onClick={() => setModalState({ editingId: ann.id, title: ann.title, content: ann.content, start_date: ann.start_date?.split('T')[0] || '', end_date: ann.end_date?.split('T')[0] || '' })}
                         className="p-2 hover:bg-blue-50 text-slate-400 hover:text-blue-600 rounded-lg transition-colors"
                       >
                         <Edit size={16} />
@@ -401,6 +429,8 @@ export default function Announcements() {
             editingId={modalState.editingId}
             initialTitle={modalState.title}
             initialContent={modalState.content}
+            initialStartDate={modalState.start_date}
+            initialEndDate={modalState.end_date}
             onSave={handleSave}
             onClose={() => setModalState(null)}
             saving={saving}

@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, CheckCircle2, Play, FileText, BookOpen, ChevronDown, ChevronRight, Trophy, X, Headphones } from 'lucide-react'
 import { motion } from 'framer-motion'
 import axios from 'axios'
+import { useQuizLock } from '../context/QuizLockContext'
 
 export default function CourseLearn() {
   const { moduleId } = useParams()
@@ -18,6 +19,9 @@ export default function CourseLearn() {
   const [quizAnswers, setQuizAnswers] = useState({})
   const [quizResult, setQuizResult] = useState(null)
   const [quizSubmitting, setQuizSubmitting] = useState(false)
+  const [showQuizWarning, setShowQuizWarning] = useState(false)
+  const contentRef = useRef(null)
+  const { setIsQuizActive } = useQuizLock()
 
   useEffect(() => {
     fetchData()
@@ -68,6 +72,10 @@ export default function CourseLearn() {
   }
 
   const selectLesson = async (lesson) => {
+    if (quizPhase === 'active') {
+      setShowQuizWarning(true)
+      return
+    }
     setCurrentLesson(lesson)
     setQuiz(null)
     setQuizPhase('idle')
@@ -94,6 +102,7 @@ export default function CourseLearn() {
       setQuiz({ ...res.data.quiz, questions })
       setQuizPhase('active')
       setQuizAnswers({})
+      setIsQuizActive(true)
     } catch (error) {
       console.error('Failed to load quiz:', error)
     }
@@ -115,6 +124,7 @@ export default function CourseLearn() {
 
       setQuizResult(res.data)
       setQuizPhase('done')
+      setIsQuizActive(false)
 
       if (res.data.passed) {
         await markComplete()
@@ -228,7 +238,7 @@ export default function CourseLearn() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div ref={contentRef} className="flex-1 overflow-y-auto">
         <div className="border-b border-gray-200 px-6 py-4 flex items-center gap-4 sticky top-0 bg-white z-10">
           <button onClick={() => setSidebarOpen(o => !o)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
             {sidebarOpen ? <ChevronDown size={18} className="rotate-90" /> : <ChevronRight size={18} />}
@@ -394,7 +404,7 @@ export default function CourseLearn() {
 
                     <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                       <button
-                        onClick={() => { setQuizPhase('idle'); setQuiz(null); setQuizAnswers({}) }}
+                        onClick={() => setShowQuizWarning(true)}
                         className="px-5 py-2 text-slate-600 hover:text-slate-900 font-medium transition-colors"
                       >
                         Cancel
@@ -449,14 +459,29 @@ export default function CourseLearn() {
                     </p>
 
                     <div className="flex justify-center gap-3">
-                      {!quizResult.passed && (
-                        <button
-                          onClick={() => { setQuizPhase('idle'); setQuiz(null); setQuizAnswers({}); setQuizResult(null) }}
-                          className="px-6 py-2 border border-purple-500 text-purple-600 hover:bg-purple-50 font-semibold rounded-lg transition-colors"
-                        >
-                          Try Again
-                        </button>
-                      )}
+                      {!quizResult.passed && (() => {
+                        const currentIdx = lessons.findIndex(l => l.id === currentLesson?.id)
+                        const prevLesson = currentIdx > 0 ? lessons[currentIdx - 1] : null
+                        return (
+                          <>
+                            {prevLesson && (
+                              <button
+                                onClick={() => selectLesson(prevLesson)}
+                                className="px-6 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold rounded-lg transition-colors flex items-center gap-2"
+                              >
+                                <ArrowLeft size={16} />
+                                Learn More
+                              </button>
+                            )}
+                            <button
+                              onClick={() => { setQuizPhase('idle'); setQuiz(null); setQuizAnswers({}); setQuizResult(null) }}
+                              className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-colors"
+                            >
+                              Try Again
+                            </button>
+                          </>
+                        )
+                      })()}
                       {quizResult.passed && lessons.findIndex(l => l.id === currentLesson.id) < lessons.length - 1 && (
                         <button
                           onClick={goToNextLesson}
@@ -485,6 +510,34 @@ export default function CourseLearn() {
           </div>
         )}
       </div>
+
+      {/* Quiz warning modal */}
+      {showQuizWarning && (
+        <>
+          <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setShowQuizWarning(false)} />
+          <div className="fixed inset-0 flex items-center justify-center z-50 p-4 pointer-events-none">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-white rounded-xl shadow-xl border border-gray-200 max-w-sm w-full pointer-events-auto p-6 text-center"
+            >
+              <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mx-auto mb-4">
+                <BookOpen size={24} className="text-purple-600" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-2">Quiz In Progress</h3>
+              <p className="text-slate-600 text-sm mb-6">
+                Please finish the quiz first before navigating away.
+              </p>
+              <button
+                onClick={() => setShowQuizWarning(false)}
+                className="w-full px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-colors"
+              >
+                Continue Quiz
+              </button>
+            </motion.div>
+          </div>
+        </>
+      )}
     </main>
   )
 }
