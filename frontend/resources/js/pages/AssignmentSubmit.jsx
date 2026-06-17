@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Send, CheckCircle, AlertCircle, Clock, Eye, CheckCircle2, Video, VideoOff, MapPin, MapPinOff } from 'lucide-react'
+import { ArrowLeft, Send, CheckCircle, AlertCircle, Clock, Eye, CheckCircle2, Video, VideoOff, MapPin, MapPinOff, Upload, ExternalLink, Loader } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import axios from 'axios'
 
@@ -21,6 +21,8 @@ export default function AssignmentSubmit() {
   const videoRef = useRef(null)
   const [location, setLocation] = useState(null)
   const [locationError, setLocationError] = useState(null)
+  const [videoModes, setVideoModes] = useState({})
+  const [videoUploading, setVideoUploading] = useState({})
 
   useEffect(() => {
     fetchAssignment()
@@ -123,6 +125,23 @@ export default function AssignmentSubmit() {
     } catch (error) {
       console.error('Failed to fetch assignment:', error)
       setLoading(false)
+    }
+  }
+
+  const handleVideoUpload = async (questionId, file) => {
+    setVideoUploading(prev => ({ ...prev, [questionId]: true }))
+    try {
+      const formData = new FormData()
+      formData.append('video', file)
+      const token = localStorage.getItem('token')
+      const response = await axios.post('/api/assignments/video-upload', formData, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
+      })
+      setAnswers(prev => ({ ...prev, [questionId]: response.data.url }))
+    } catch (error) {
+      setMessage({ show: true, type: 'error', text: 'Failed to upload video. Please try a smaller file or use a link instead.' })
+    } finally {
+      setVideoUploading(prev => ({ ...prev, [questionId]: false }))
     }
   }
 
@@ -401,7 +420,7 @@ export default function AssignmentSubmit() {
                     {idx + 1}. {question.question}
                   </p>
                   <p className="text-xs text-slate-500 capitalize">
-                    {question.type === 'multiple_choice' ? 'Multiple Choice' : 'Essay'}
+                    {question.type === 'multiple_choice' ? 'Multiple Choice' : question.type === 'video' ? 'Video Answer' : 'Essay'}
                   </p>
                 </div>
 
@@ -441,6 +460,93 @@ export default function AssignmentSubmit() {
                       )
                     })}
                   </div>
+                ) : question.type === 'video' ? (
+                  isReadOnly ? (
+                    answers[question.id] ? (
+                      /\.(mp4|mov|avi|webm|mkv)(\?.*)?$/i.test(answers[question.id]) || answers[question.id].includes('/storage/') ? (
+                        <video controls src={answers[question.id]} className="w-full max-h-56 rounded-lg border border-gray-200" />
+                      ) : (
+                        <a
+                          href={answers[question.id]}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-blue-600 hover:underline text-sm p-3 bg-blue-50 border border-blue-200 rounded-lg break-all"
+                        >
+                          <ExternalLink size={15} className="flex-shrink-0" />
+                          {answers[question.id]}
+                        </a>
+                      )
+                    ) : (
+                      <p className="text-sm text-slate-400 italic">No video submitted</p>
+                    )
+                  ) : (
+                    <div>
+                      {/* Mode tabs */}
+                      <div className="flex gap-1 mb-3 p-1 bg-gray-100 rounded-lg w-fit">
+                        {['link', 'file'].map(mode => (
+                          <button
+                            key={mode}
+                            type="button"
+                            onClick={() => setVideoModes(prev => ({ ...prev, [question.id]: mode }))}
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+                              (videoModes[question.id] || 'link') === mode
+                                ? 'bg-white text-slate-900 shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700'
+                            }`}
+                          >
+                            {mode === 'file' ? 'Upload MP4' : 'Video Link'}
+                          </button>
+                        ))}
+                      </div>
+
+                      {(videoModes[question.id] || 'link') === 'file' ? (
+                        videoUploading[question.id] ? (
+                          <div className="flex items-center gap-3 p-4 bg-gray-50 border border-gray-200 rounded-lg text-slate-600">
+                            <Loader className="w-4 h-4 animate-spin text-slate-500" />
+                            <span className="text-sm">Uploading video...</span>
+                          </div>
+                        ) : answers[question.id] && (answers[question.id].includes('/storage/') || /\.(mp4|mov|avi|webm|mkv)/i.test(answers[question.id])) ? (
+                          <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <p className="text-sm text-green-700 font-medium flex items-center gap-2 mb-2">
+                              <CheckCircle2 size={15} />
+                              Video uploaded successfully
+                            </p>
+                            <video controls src={answers[question.id]} className="w-full max-h-48 rounded" />
+                            <button
+                              type="button"
+                              onClick={() => setAnswers(prev => ({ ...prev, [question.id]: '' }))}
+                              className="mt-2 text-xs text-red-500 hover:underline"
+                            >
+                              Remove and re-upload
+                            </button>
+                          </div>
+                        ) : (
+                          <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                            <Upload className="w-6 h-6 text-slate-400 mb-2" />
+                            <p className="text-sm text-slate-600 font-medium">Click to upload MP4 video</p>
+                            <p className="text-xs text-slate-400 mt-1">MP4, MOV, AVI, WebM — max 200MB</p>
+                            <input
+                              type="file"
+                              accept="video/mp4,video/mov,video/avi,video/webm,video/quicktime"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0]
+                                if (file) handleVideoUpload(question.id, file)
+                              }}
+                            />
+                          </label>
+                        )
+                      ) : (
+                        <input
+                          type="url"
+                          value={answers[question.id] || ''}
+                          onChange={(e) => setAnswers(prev => ({ ...prev, [question.id]: e.target.value }))}
+                          placeholder="Paste your video link (YouTube, Google Drive, etc.)"
+                          className="w-full px-4 py-3 border border-gray-200 rounded-lg text-slate-900 placeholder-slate-400 focus:ring-1 focus:ring-slate-700 focus:border-slate-700 focus:outline-none"
+                        />
+                      )}
+                    </div>
+                  )
                 ) : (
                   <textarea
                     value={answers[question.id] || ''}

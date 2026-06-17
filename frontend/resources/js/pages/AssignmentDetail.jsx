@@ -504,6 +504,7 @@ export default function AssignmentDetail() {
                   >
                     <option value="multiple_choice">Multiple Choice</option>
                     <option value="essay">Essay</option>
+                    <option value="video">Video Answer</option>
                   </select>
                 </div>
 
@@ -563,6 +564,16 @@ export default function AssignmentDetail() {
                   </div>
                 )}
 
+                {/* Video Note */}
+                {questionType === 'video' && (
+                  <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                    <p className="text-sm text-purple-800 font-medium mb-1">Video Answer</p>
+                    <p className="text-sm text-purple-700">
+                      Students can upload an MP4 video file (max 200MB) or paste a video link (YouTube, Google Drive, etc.). You can review and grade their video submission manually.
+                    </p>
+                  </div>
+                )}
+
                 {/* Form Actions */}
                 <div className="flex gap-3 justify-end pt-2">
                   <button
@@ -608,7 +619,7 @@ export default function AssignmentDetail() {
                       <div className="flex items-center gap-2 mb-2">
                         <p className="font-semibold text-slate-900">{question.question}</p>
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 capitalize">
-                          {question.type === 'multiple_choice' ? 'Multiple Choice' : 'Essay'}
+                          {question.type === 'multiple_choice' ? 'Multiple Choice' : question.type === 'video' ? 'Video Answer' : 'Essay'}
                         </span>
                       </div>
                       {question.type === 'multiple_choice' && question.options && (
@@ -629,7 +640,10 @@ export default function AssignmentDetail() {
                         </div>
                       )}
                       {question.type === 'essay' && (
-                        <p className="text-sm text-slate-600 italic">Essay question - Students write their own answer</p>
+                        <p className="text-sm text-slate-600 italic">Essay question — students write their own answer</p>
+                      )}
+                      {question.type === 'video' && (
+                        <p className="text-sm text-slate-600 italic">Video question — students upload MP4 or paste a video link</p>
                       )}
                     </div>
                     <div className="ml-4 flex gap-2">

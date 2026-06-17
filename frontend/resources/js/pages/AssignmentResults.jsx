@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Eye, X, CheckCircle, XCircle, Star, RotateCcw, ToggleLeft, ToggleRight } from 'lucide-react'
+import { ArrowLeft, Eye, X, CheckCircle, XCircle, Star, RotateCcw, ToggleLeft, ToggleRight, ExternalLink } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import axios from 'axios'
 
@@ -126,7 +126,7 @@ export default function AssignmentResults() {
   })()
 
   const mcQuestions = questions.filter(q => q.type === 'multiple_choice')
-  const essayQuestions = questions.filter(q => q.type === 'essay')
+  const essayQuestions = questions.filter(q => q.type === 'essay' || q.type === 'video')
   // If only one type exists, weight is 100% for that type regardless of stored mc_weight
   const mcWeight =
     mcQuestions.length > 0 && essayQuestions.length === 0 ? 100
@@ -432,6 +432,7 @@ export default function AssignmentResults() {
                 {questions.map((question, idx) => {
                   const answer = parsedAnswers[question.id]
                   const isEssay = question.type === 'essay'
+                  const isVideo = question.type === 'video'
                   const correctOption = question.options?.find(o => o.is_correct)
                   const staffAnsweredCorrectly =
                     correctOption && String(correctOption.id) === String(answer)
@@ -446,7 +447,7 @@ export default function AssignmentResults() {
                         <p className="font-semibold text-slate-900 leading-snug">
                           {idx + 1}. {question.question}
                         </p>
-                        {!isEssay && answer && (
+                        {!isEssay && !isVideo && answer && (
                           <span className={`shrink-0 flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full ${
                             staffAnsweredCorrectly
                               ? 'bg-green-100 text-green-700'
@@ -460,17 +461,39 @@ export default function AssignmentResults() {
                         )}
                       </div>
                       <p className="text-xs text-slate-500 mb-3">
-                        {isEssay ? 'Essay' : 'Multiple Choice'}
+                        {isEssay ? 'Essay' : isVideo ? 'Video Answer' : 'Multiple Choice'}
                       </p>
 
-                      {isEssay ? (
+                      {(isEssay || isVideo) ? (
                         <>
-                          <div className="bg-white border border-gray-200 rounded-lg p-3 min-h-[60px]">
-                            <p className="text-sm text-slate-900 whitespace-pre-wrap">
-                              {answer || <span className="text-slate-400 italic">No answer</span>}
-                            </p>
-                          </div>
-                          {/* Essay score input */}
+                          {isVideo ? (
+                            <div className="bg-white border border-gray-200 rounded-lg p-3 min-h-[60px]">
+                              {answer ? (
+                                /\.(mp4|mov|avi|webm|mkv)(\?.*)?$/i.test(answer) || answer.includes('/storage/') ? (
+                                  <video controls src={answer} className="w-full max-h-60 rounded" />
+                                ) : (
+                                  <a
+                                    href={answer}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 text-blue-600 hover:underline text-sm break-all"
+                                  >
+                                    <ExternalLink size={14} className="flex-shrink-0" />
+                                    {answer}
+                                  </a>
+                                )
+                              ) : (
+                                <span className="text-slate-400 italic text-sm">No video submitted</span>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="bg-white border border-gray-200 rounded-lg p-3 min-h-[60px]">
+                              <p className="text-sm text-slate-900 whitespace-pre-wrap">
+                                {answer || <span className="text-slate-400 italic">No answer</span>}
+                              </p>
+                            </div>
+                          )}
+                          {/* Score input (essay + video) */}
                           <div className="mt-3 flex items-center gap-3">
                             <label className="text-sm font-medium text-slate-700 shrink-0">
                               Score for this question:

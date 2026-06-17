@@ -63,6 +63,7 @@ Route::middleware('api')->group(function () {
         Route::get('/quizzes', [QuizController::class, 'index']);
         Route::get('/quizzes/{id}', [QuizController::class, 'show']);
         Route::get('/assignments', [AssignmentController::class, 'index']);
+        Route::post('/assignments/video-upload', [AssignmentController::class, 'uploadVideo']);
 
         // Community & Gamification (All Users)
         Route::get('/leaderboard', [LeaderboardController::class, 'index']);

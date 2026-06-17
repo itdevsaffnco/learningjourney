@@ -351,7 +351,7 @@ class AssignmentController extends Controller
 
             $validated = $request->validate([
                 'question_text' => 'required|string',
-                'type' => 'required|in:multiple_choice,essay',
+                'type' => 'required|in:multiple_choice,essay,video',
                 'options' => 'required_if:type,multiple_choice|array|min:2|max:6',
                 'options.*' => 'required_with:options|string',
                 'correct_option' => 'required_if:type,multiple_choice|integer|min:0',
@@ -398,7 +398,7 @@ class AssignmentController extends Controller
 
             $validated = $request->validate([
                 'question_text' => 'sometimes|string',
-                'type' => 'sometimes|in:multiple_choice,essay',
+                'type' => 'sometimes|in:multiple_choice,essay,video',
                 'options' => 'sometimes|array|min:2|max:6',
                 'options.*' => 'required_with:options|string',
                 'correct_option' => 'sometimes|integer|min:0',
@@ -430,6 +430,17 @@ class AssignmentController extends Controller
                 'message' => 'Failed to update question',
             ], 500);
         }
+    }
+
+    public function uploadVideo(Request $request)
+    {
+        $request->validate([
+            'video' => 'required|file|mimes:mp4,mov,avi,mkv,webm|max:204800',
+        ]);
+
+        $path = $request->file('video')->store('assignment-videos', 'public');
+
+        return response()->json(['url' => url('storage/' . $path)]);
     }
 
     public function deleteQuestion(Request $request, $assignmentId, $questionId)
