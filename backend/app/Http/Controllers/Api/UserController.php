@@ -559,6 +559,10 @@ class UserController extends Controller
         $totalStaff = $staffRole ? User::where('role_id', $staffRole->id)->count() : 0;
         $activeStudents = $staffRole ? User::where('role_id', $staffRole->id)->whereNotNull('last_login_at')->count() : 0;
 
+        // Get trainer count (for Admin view)
+        $trainerRole = \App\Models\Role::where('name', 'Trainer')->first();
+        $totalTrainers = $trainerRole ? User::where('role_id', $trainerRole->id)->count() : 0;
+
         // Get trainer's module count
         $totalModules = \App\Models\Module::where('created_by', $user->id)->count();
 
@@ -636,6 +640,7 @@ class UserController extends Controller
         return response()->json([
             'stats' => [
                 'totalStaff' => $totalStaff,
+                'totalTrainers' => $totalTrainers,
                 'totalModules' => $totalModules,
                 'totalQuizzes' => $totalQuizzes,
                 'totalAssignments' => $totalAssignments,

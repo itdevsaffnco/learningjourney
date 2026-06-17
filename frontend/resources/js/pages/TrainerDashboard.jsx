@@ -7,6 +7,7 @@ export default function TrainerDashboard({ user }) {
   const { isAdmin } = useRole()
   const [stats, setStats] = useState({
     totalStaff: 0,
+    totalTrainers: 0,
     totalModules: 0,
     totalQuizzes: 0,
     totalAssignments: 0,
@@ -158,6 +159,27 @@ export default function TrainerDashboard({ user }) {
               </div>
             </div>
           </motion.div>
+
+          {/* Total Trainers — Admin only */}
+          {isAdmin() && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.03 }}
+              className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 hover:shadow-md transition-all"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-slate-600 text-sm font-medium">Total Trainer</p>
+                  <p className="text-3xl font-bold text-slate-900 mt-3">{displayValue(stats.totalTrainers)}</p>
+                  <p className="text-xs text-slate-500 mt-1">Terdaftar</p>
+                </div>
+                <div className="p-3 bg-indigo-50 rounded-lg">
+                  <Users className="w-6 h-6 text-indigo-600" />
+                </div>
+              </div>
+            </motion.div>
+          )}
 
           {/* Total Modules */}
           <motion.div
