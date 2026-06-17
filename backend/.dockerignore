@@ -10,7 +10,6 @@ storage/framework/views/
 bootstrap/cache/
 tests/
 *.md
-docker/
 .github/
 .gitignore
 phpunit.xml
