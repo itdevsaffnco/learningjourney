@@ -1,0 +1,160 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+env:
+  BACKEND_IMAGE: itsaffnco/saffnco_learning_backend_app
+  FRONTEND_IMAGE: itsaffnco/saffnco_learning_frontend_app
+  NETWORK_NAME: learningjourney
+
+jobs:
+  # ─── BUILD BACKEND ────────────────────────────────────────────────────────
+  build-backend:
+    name: Build & Push Backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build & push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.BACKEND_IMAGE }}:latest
+            ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+          cache-from: type=registry,ref=${{ env.BACKEND_IMAGE }}:latest
+          cache-to: type=inline
+
+  # ─── BUILD FRONTEND ───────────────────────────────────────────────────────
+  build-frontend:
+    name: Build & Push Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build & push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.FRONTEND_IMAGE }}:latest
+            ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+          cache-from: type=registry,ref=${{ env.FRONTEND_IMAGE }}:latest
+          cache-to: type=inline
+
+  # ─── DEPLOY ───────────────────────────────────────────────────────────────
+  deploy:
+    name: Deploy to Server
+    runs-on: ubuntu-latest
+    needs: [build-backend, build-frontend]
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          BACKEND_ENV: ${{ secrets.BACKEND_ENV }}
+          DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASS: ${{ secrets.DOCKER_PASSWORD }}
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          envs: BACKEND_ENV,DOCKER_USER,DOCKER_PASS
+          script_stop: true
+          script: |
+            set -e
+
+            BACKEND_IMAGE="itsaffnco/saffnco_learning_backend_app:latest"
+            FRONTEND_IMAGE="itsaffnco/saffnco_learning_frontend_app:latest"
+            NETWORK="learningjourney"
+
+            echo "==> Login to Docker Hub"
+            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+
+            echo "==> Creating Docker network: $NETWORK"
+            docker network create $NETWORK 2>/dev/null || echo "Network already exists, skipping."
+
+            echo "==> Preparing env directory"
+            mkdir -p "$HOME/learningjourney"
+
+            echo "==> Writing backend .env"
+            printf '%s' "$BACKEND_ENV" > "$HOME/learningjourney/backend.env"
+            chmod 600 "$HOME/learningjourney/backend.env"
+
+            # ── BACKEND ──────────────────────────────────────────────────
+            echo "==> Stopping old backend container..."
+            docker stop learningjourney_backend 2>/dev/null || true
+            docker rm learningjourney_backend 2>/dev/null || true
+
+            echo "==> Removing old backend image..."
+            docker rmi $BACKEND_IMAGE 2>/dev/null || true
+
+            echo "==> Pulling new backend image..."
+            docker pull $BACKEND_IMAGE
+
+            echo "==> Starting backend container..."
+            docker run -d \
+              --name learningjourney_backend \
+              --network $NETWORK \
+              --env-file "$HOME/learningjourney/backend.env" \
+              --add-host host.docker.internal:host-gateway \
+              -p 2012:80 \
+              --restart unless-stopped \
+              $BACKEND_IMAGE
+
+            # ── FRONTEND ─────────────────────────────────────────────────
+            echo "==> Stopping old frontend container..."
+            docker stop learningjourney_frontend 2>/dev/null || true
+            docker rm learningjourney_frontend 2>/dev/null || true
+
+            echo "==> Removing old frontend image..."
+            docker rmi $FRONTEND_IMAGE 2>/dev/null || true
+
+            echo "==> Pulling new frontend image..."
+            docker pull $FRONTEND_IMAGE
+
+            echo "==> Starting frontend container..."
+            docker run -d \
+              --name learningjourney_frontend \
+              --network $NETWORK \
+              -p 2013:80 \
+              --restart unless-stopped \
+              $FRONTEND_IMAGE
+
+            echo "==> Cleaning up dangling images..."
+            docker image prune -f
+
+            echo "==> Verifying containers are running..."
+            docker ps --filter "name=learningjourney_" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+
+            echo ""
+            echo "✓ Deployment complete!"
+            echo "  Frontend : http://${{ secrets.SERVER_HOST }}:2013"
+            echo "  Backend  : http://${{ secrets.SERVER_HOST }}:2012"
