@@ -17,7 +17,7 @@ echo "==> Waiting for PHP-FPM to be ready..."
 sleep 2
 
 echo "==> Running database migrations..."
-php artisan migrate --force
+php artisan migrate --force 2>&1 || echo "[WARN] Migration had errors, continuing startup..."
 
 echo "==> Clearing all caches..."
 php artisan optimize:clear
