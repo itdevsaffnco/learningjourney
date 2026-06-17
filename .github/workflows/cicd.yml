@@ -125,7 +125,7 @@ jobs:
               --network $NETWORK \
               --env-file "$HOME/learningjourney/backend.env" \
               --add-host host.docker.internal:host-gateway \
-              -p 2027:80 \
+              -p 2012:80 \
               --restart unless-stopped \
               $BACKEND_IMAGE
 
@@ -144,7 +144,7 @@ jobs:
             docker run -d \
               --name learningjourney_frontend \
               --network $NETWORK \
-              -p 2026:80 \
+              -p 2013:80 \
               --restart unless-stopped \
               $FRONTEND_IMAGE
 
@@ -156,5 +156,5 @@ jobs:
 
             echo ""
             echo "✓ Deployment complete!"
-            echo "  Frontend : http://${{ secrets.SERVER_HOST }}:2026"
-            echo "  Backend  : http://${{ secrets.SERVER_HOST }}:2027"
+            echo "  Frontend : http://${{ secrets.SERVER_HOST }}:2013"
+            echo "  Backend  : http://${{ secrets.SERVER_HOST }}:2012"
