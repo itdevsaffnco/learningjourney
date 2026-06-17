@@ -25,7 +25,6 @@ php artisan optimize:clear
 echo "==> Caching for production..."
 php artisan config:cache
 php artisan route:cache
-php artisan view:cache
 php artisan event:cache
 
 echo "==> Creating storage symlink..."
