@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react'
 import { motion } from 'framer-motion'
+import sotbBg from '../../../assets/sotb.jpg'
 
 export default function Login({ onLogin }) {
   const [email, setEmail] = useState('')
@@ -77,7 +78,7 @@ export default function Login({ onLogin }) {
           transition={{ delay: 0.1 }}
           className="hidden lg:flex lg:w-1/2 relative overflow-hidden items-center justify-center p-8"
           style={{
-            backgroundImage: "url('/assets/sotb.jpg')",
+            backgroundImage: `url(${sotbBg})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           }}
