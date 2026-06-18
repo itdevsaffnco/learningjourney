@@ -669,30 +669,45 @@ class UserController extends Controller
 
     public function trainerCreateStaff(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|string|min:8',
-            'division_id' => 'required|exists:divisions,id',
-            'role_id' => 'required|exists:roles,id',
-            'store_location' => 'nullable|string|max:255',
-        ]);
+        try {
+            $validated = $request->validate([
+                'name'           => 'required|string|max:255',
+                'email'          => 'required|email|unique:users',
+                'password'       => 'required|string|min:8',
+                'division_id'    => 'nullable|exists:divisions,id',
+                'role_id'        => 'required|exists:roles,id',
+                'store_location' => 'nullable|string|max:255',
+            ]);
 
-        $user = User::create([
-            ...$validated,
-            'password' => Hash::make($validated['password']),
-        ]);
+            $userData = [
+                'name'        => $validated['name'],
+                'email'       => $validated['email'],
+                'password'    => Hash::make($validated['password']),
+                'role_id'     => $validated['role_id'],
+                'division_id' => $validated['division_id'] ?? null,
+            ];
 
-        $user->points()->create([
-            'total_points' => 0,
-            'quiz_points' => 0,
-            'assignment_points' => 0,
-        ]);
+            if (!empty($validated['store_location']) && \Schema::hasColumn('users', 'store_location')) {
+                $userData['store_location'] = $validated['store_location'];
+            }
 
-        return response()->json([
-            'message' => 'Staff created successfully',
-            'data' => $user->load(['division', 'role']),
-        ], 201);
+            $user = User::create($userData);
+
+            $user->points()->firstOrCreate(
+                ['user_id' => $user->id],
+                ['total_points' => 0, 'quiz_points' => 0, 'assignment_points' => 0, 'streak_bonus' => 0, 'daily_streak' => 0]
+            );
+
+            return response()->json([
+                'message' => 'Staff created successfully',
+                'data'    => $user->load(['division', 'role']),
+            ], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['message' => 'Validation error', 'errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            \Log::error('Create staff error: ' . $e->getMessage());
+            return response()->json(['message' => 'Failed to create user: ' . $e->getMessage()], 500);
+        }
     }
 
     public function trainerUpdateStaff(Request $request, $id)
