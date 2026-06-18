@@ -24,6 +24,7 @@ export default function UserManagement({ user }) {
     password: '',
     division_id: '',
     role_id: '',
+    store_location: '',
   })
 
   const [editingId, setEditingId] = useState(null)
@@ -89,7 +90,7 @@ export default function UserManagement({ user }) {
       const method = editingId ? 'PUT' : 'POST'
 
       const payload = editingId
-        ? { name: formData.name, division_id: formData.division_id, role_id: formData.role_id }
+        ? { name: formData.name, division_id: formData.division_id, role_id: formData.role_id, store_location: formData.store_location || null }
         : formData
 
       const response = await fetch(url, {
@@ -104,7 +105,7 @@ export default function UserManagement({ user }) {
       if (response.ok) {
         setSuccessMessage(editingId ? 'User updated successfully!' : 'User created successfully!')
         setTimeout(() => setSuccessMessage(null), 3000)
-        setFormData({ name: '', email: '', password: '', division_id: '', role_id: '' })
+        setFormData({ name: '', email: '', password: '', division_id: '', role_id: '', store_location: '' })
         setRoleSearch('')
         setDivisionSearch('')
         setEditingId(null)
@@ -170,6 +171,7 @@ export default function UserManagement({ user }) {
       password: '',
       division_id: userData.division?.id || '',
       role_id: userData.role?.id || '',
+      store_location: userData.store_location || '',
     })
     setRoleSearch(userData.role?.name || '')
     setDivisionSearch(userData.division?.name || '')
@@ -212,7 +214,7 @@ export default function UserManagement({ user }) {
             onClick={() => {
               setShowForm(!showForm)
               setEditingId(null)
-              setFormData({ name: '', email: '', password: '', division_id: '', role_id: '' })
+              setFormData({ name: '', email: '', password: '', division_id: '', role_id: '', store_location: '' })
               setRoleSearch('')
               setDivisionSearch('')
             }}
@@ -420,7 +422,7 @@ export default function UserManagement({ user }) {
                   onClick={() => {
                     setShowForm(false)
                     setEditingId(null)
-                    setFormData({ name: '', email: '', password: '', division_id: '', role_id: '' })
+                    setFormData({ name: '', email: '', password: '', division_id: '', role_id: '', store_location: '' })
                     setRoleSearch('')
                     setDivisionSearch('')
                   }}
@@ -434,6 +436,18 @@ export default function UserManagement({ user }) {
                 >
                   {editingId ? 'Update User' : 'Create User'}
                 </button>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-900 mb-2">
+                    Store Location <span className="text-slate-400 font-normal">(optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.store_location}
+                    onChange={(e) => setFormData({ ...formData, store_location: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-slate-700 focus:border-slate-700 focus:outline-none text-slate-900"
+                    placeholder="e.g. Jakarta Selatan, Grand Indonesia"
+                  />
+                </div>
               </div>
             </form>
           </motion.div>
@@ -460,6 +474,7 @@ export default function UserManagement({ user }) {
                   <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Email</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Role</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Division</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Store Location</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Actions</th>
                 </tr>
               </thead>
@@ -475,6 +490,7 @@ export default function UserManagement({ user }) {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-slate-600">{userData.division?.name || '-'}</td>
+                      <td className="px-6 py-4 text-sm text-slate-600">{userData.store_location || '-'}</td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <button
@@ -497,7 +513,7 @@ export default function UserManagement({ user }) {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="5" className="px-6 py-12 text-center text-slate-600">
+                    <td colSpan="6" className="px-6 py-12 text-center text-slate-600">
                       No users found
                     </td>
                   </tr>

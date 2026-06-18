@@ -27,6 +27,7 @@ class User extends Authenticatable
         'role_id',
         'avatar_url',
         'bio',
+        'store_location',
         'last_login_at',
     ];
 

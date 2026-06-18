@@ -674,6 +674,7 @@ class UserController extends Controller
             'password' => 'required|string|min:8',
             'division_id' => 'required|exists:divisions,id',
             'role_id' => 'required|exists:roles,id',
+            'store_location' => 'nullable|string|max:255',
         ]);
 
         $user = User::create([
@@ -701,6 +702,7 @@ class UserController extends Controller
             'name' => 'string|max:255',
             'division_id' => 'exists:divisions,id',
             'role_id' => 'exists:roles,id',
+            'store_location' => 'nullable|string|max:255',
         ]);
 
         $user->update($validated);
