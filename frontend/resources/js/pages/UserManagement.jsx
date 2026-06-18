@@ -313,16 +313,18 @@ export default function UserManagement({ user }) {
                     />
 
                     {showRoleDropdown && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+                      <div
+                        className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto"
+                        onMouseDown={(e) => e.preventDefault()}
+                      >
                         {roles
                           .filter(role => !roleSearch || role.name.toLowerCase().includes(roleSearch.toLowerCase()))
                           .map(role => (
                             <button
                               key={role.id}
                               type="button"
-                              onMouseDown={(e) => {
-                                e.preventDefault()
-                                setFormData({ ...formData, role_id: role.id })
+                              onClick={() => {
+                                setFormData(prev => ({ ...prev, role_id: role.id }))
                                 setRoleSearch(role.name)
                                 setShowRoleDropdown(false)
                               }}
@@ -353,16 +355,18 @@ export default function UserManagement({ user }) {
                     />
 
                     {showDivisionDropdown && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+                      <div
+                        className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto"
+                        onMouseDown={(e) => e.preventDefault()}
+                      >
                         {divisions
                           .filter(div => !divisionSearch || div.name.toLowerCase().includes(divisionSearch.toLowerCase()))
                           .map(div => (
                             <button
                               key={div.id}
                               type="button"
-                              onMouseDown={(e) => {
-                                e.preventDefault()
-                                setFormData({ ...formData, division_id: div.id })
+                              onClick={() => {
+                                setFormData(prev => ({ ...prev, division_id: div.id }))
                                 setDivisionSearch(div.name)
                                 setShowDivisionDropdown(false)
                               }}
@@ -375,7 +379,7 @@ export default function UserManagement({ user }) {
                         {divisionSearch && (
                           <button
                             type="button"
-                            onMouseDown={(e) => { e.preventDefault(); setShowDivisionCreate(true) }}
+                            onClick={() => setShowDivisionCreate(true)}
                             className="w-full text-left px-4 py-2 text-slate-700 hover:bg-gray-50 transition-colors flex items-center gap-2 border-t border-gray-200 font-medium"
                           >
                             <Plus className="w-4 h-4" />
