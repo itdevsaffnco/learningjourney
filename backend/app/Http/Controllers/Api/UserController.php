@@ -657,13 +657,12 @@ class UserController extends Controller
 
     public function trainerStaffList(Request $request)
     {
-        $staffRole = \App\Models\Role::where('name', 'Staff')->first();
-        $staff = User::where('role_id', $staffRole?->id)
-            ->with(['division', 'role'])
+        $users = User::with(['division', 'role'])
+            ->whereHas('role')
             ->get();
 
         return response()->json([
-            'data' => $staff,
+            'data' => $users,
         ]);
     }
 
