@@ -69,7 +69,7 @@ export default function Login({ onLogin }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6 }}
-        className="relative z-10 flex h-screen w-full md:h-auto md:max-w-6xl md:rounded-lg md:shadow-sm md:border md:border-gray-200 overflow-hidden"
+        className="relative z-10 flex h-screen w-full md:h-auto md:min-h-[620px] md:max-w-5xl md:rounded-2xl md:shadow-sm md:border md:border-gray-200 overflow-hidden"
       >
         {/* Left Side - Image */}
         <motion.div
