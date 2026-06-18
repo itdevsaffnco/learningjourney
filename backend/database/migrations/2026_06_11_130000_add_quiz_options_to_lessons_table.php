@@ -9,8 +9,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('lessons', function (Blueprint $table) {
-            $table->boolean('randomize_questions')->default(false)->after('quiz_id');
-            $table->unsignedInteger('num_questions_to_show')->nullable()->after('randomize_questions');
+            if (!Schema::hasColumn('lessons', 'randomize_questions')) {
+                $table->boolean('randomize_questions')->default(false)->after('quiz_id');
+            }
+            if (!Schema::hasColumn('lessons', 'num_questions_to_show')) {
+                $table->unsignedInteger('num_questions_to_show')->nullable()->after('randomize_questions');
+            }
         });
     }
 

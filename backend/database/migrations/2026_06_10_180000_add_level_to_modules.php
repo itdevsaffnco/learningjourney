@@ -9,7 +9,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('modules', function (Blueprint $table) {
-            $table->enum('level', ['easy', 'medium', 'hard'])->default('easy')->after('title');
+            if (!Schema::hasColumn('modules', 'level')) {
+                $table->enum('level', ['easy', 'medium', 'hard'])->default('easy')->after('title');
+            }
         });
     }
 

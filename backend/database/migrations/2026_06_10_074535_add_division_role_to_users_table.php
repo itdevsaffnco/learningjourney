@@ -12,11 +12,21 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->foreignId('division_id')->nullable()->constrained('divisions')->onDelete('set null');
-            $table->foreignId('role_id')->nullable()->constrained('roles')->onDelete('set null');
-            $table->string('avatar_url')->nullable();
-            $table->text('bio')->nullable();
-            $table->timestamp('last_login_at')->nullable();
+            if (!Schema::hasColumn('users', 'division_id')) {
+                $table->foreignId('division_id')->nullable()->constrained('divisions')->onDelete('set null');
+            }
+            if (!Schema::hasColumn('users', 'role_id')) {
+                $table->foreignId('role_id')->nullable()->constrained('roles')->onDelete('set null');
+            }
+            if (!Schema::hasColumn('users', 'avatar_url')) {
+                $table->string('avatar_url')->nullable();
+            }
+            if (!Schema::hasColumn('users', 'bio')) {
+                $table->text('bio')->nullable();
+            }
+            if (!Schema::hasColumn('users', 'last_login_at')) {
+                $table->timestamp('last_login_at')->nullable();
+            }
         });
     }
 

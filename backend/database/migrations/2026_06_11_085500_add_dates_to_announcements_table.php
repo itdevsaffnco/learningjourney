@@ -12,8 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('announcements', function (Blueprint $table) {
-            $table->dateTime('start_date')->nullable()->after('published_at');
-            $table->dateTime('end_date')->nullable()->after('start_date');
+            if (!Schema::hasColumn('announcements', 'start_date')) {
+                $table->dateTime('start_date')->nullable()->after('published_at');
+            }
+            if (!Schema::hasColumn('announcements', 'end_date')) {
+                $table->dateTime('end_date')->nullable()->after('start_date');
+            }
         });
     }
 
