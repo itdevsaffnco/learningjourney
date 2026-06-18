@@ -17,6 +17,8 @@ export default function AssignmentManager() {
     description: '',
     instructions: '',
     due_date: '',
+    target_role: '',
+    target_division: '',
   })
 
   const filteredAssignments = assignments.filter(assignment =>
@@ -64,7 +66,7 @@ export default function AssignmentManager() {
           'Content-Type': 'application/json',
         },
       })
-      setFormData({ title: '', description: '', instructions: '', due_date: '' })
+      setFormData({ title: '', description: '', instructions: '', due_date: '', target_role: '', target_division: '' })
       setShowCreateForm(false)
       await fetchAssignments()
     } catch (error) {
@@ -168,6 +170,35 @@ export default function AssignmentManager() {
                   onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-slate-700 focus:border-slate-700 focus:outline-none text-slate-900"
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-900 mb-2">Target Division</label>
+                  <select
+                    value={formData.target_division}
+                    onChange={(e) => setFormData({ ...formData, target_division: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-slate-700 focus:border-slate-700 focus:outline-none text-slate-900 bg-white"
+                  >
+                    <option value="">All Divisions</option>
+                    <option value="Beauty Advisor">Beauty Advisor</option>
+                    <option value="Host Live">Host Live</option>
+                    <option value="Customer Service">Customer Service</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-900 mb-2">Target Role</label>
+                  <select
+                    value={formData.target_role}
+                    onChange={(e) => setFormData({ ...formData, target_role: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-slate-700 focus:border-slate-700 focus:outline-none text-slate-900 bg-white"
+                  >
+                    <option value="">All Roles</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Trainer">Trainer</option>
+                    <option value="Staff">Staff</option>
+                  </select>
+                </div>
               </div>
 
               <div className="flex gap-3 justify-end pt-2">

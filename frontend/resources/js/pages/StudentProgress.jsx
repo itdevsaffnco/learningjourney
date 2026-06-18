@@ -9,11 +9,17 @@ export default function StudentProgress() {
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [filterDivision, setFilterDivision] = useState('all')
 
-  const filteredStudents = students.filter(student =>
-    student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    student.email.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const DIVISIONS = ['Beauty Advisor', 'Host Live', 'Customer Service']
+
+  const filteredStudents = students.filter(student => {
+    const matchSearch = !searchQuery ||
+      student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      student.email.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchDivision = filterDivision === 'all' || student.division === filterDivision
+    return matchSearch && matchDivision
+  })
 
   useEffect(() => {
     fetchStudents()
@@ -68,6 +74,32 @@ export default function StudentProgress() {
               </button>
             )}
           </div>
+
+          {/* Division filter chips */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-slate-500 font-medium">Division:</span>
+            <button
+              onClick={() => setFilterDivision('all')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${filterDivision === 'all' ? 'bg-slate-700 text-white' : 'border border-gray-200 text-slate-600 hover:bg-gray-50'}`}
+            >All</button>
+            {DIVISIONS.map(div => (
+              <button
+                key={div}
+                onClick={() => setFilterDivision(div)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${filterDivision === div ? 'bg-slate-700 text-white' : 'border border-gray-200 text-slate-600 hover:bg-gray-50'}`}
+              >{div}</button>
+            ))}
+            {(filterDivision !== 'all' || searchQuery) && (
+              <button
+                onClick={() => { setFilterDivision('all'); setSearchQuery('') }}
+                className="ml-auto text-xs text-slate-500 hover:text-slate-800 underline transition-colors"
+              >Reset</button>
+            )}
+          </div>
+
+          {(filterDivision !== 'all' || searchQuery) && (
+            <p className="text-xs text-slate-500">{filteredStudents.length} student ditemukan</p>
+          )}
         </div>
 
         {/* Students Grid */}
@@ -94,7 +126,12 @@ export default function StudentProgress() {
                     <h3 className="font-bold text-lg text-slate-900 leading-tight mb-1">
                       {student.name}
                     </h3>
-                    <p className="text-sm text-slate-600">{student.email}</p>
+                    <p className="text-sm text-slate-600 mb-2">{student.email}</p>
+                    {student.division && (
+                      <span className="inline-block px-2.5 py-1 bg-purple-50 text-purple-700 text-xs font-medium rounded-full border border-purple-100">
+                        {student.division}
+                      </span>
+                    )}
                   </div>
 
                   {/* Stats Grid */}

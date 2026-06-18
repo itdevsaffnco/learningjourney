@@ -335,7 +335,7 @@ class UserController extends Controller
     public function studentProgress(Request $request)
     {
         $students = User::whereHas('role', fn($q) => $q->where('name', 'Staff'))
-            ->with(['progress', 'points'])
+            ->with(['progress', 'points', 'division'])
             ->get()
             ->map(function ($user) {
                 $completedLessons = $user->progress->where('is_completed', true)->count();
@@ -346,6 +346,7 @@ class UserController extends Controller
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
+                    'division' => $user->division?->name,
                     'completed_lessons' => $completedLessons,
                     'total_points' => $user->points?->total_points ?? 0,
                     'completion_rate' => $completionRate,

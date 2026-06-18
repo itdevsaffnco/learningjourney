@@ -17,6 +17,12 @@ export default function CertificateRequests() {
   const [loading, setLoading] = useState(true)
   const [acting, setActing] = useState(null)
   const [toast, setToast] = useState(null)
+  const [filterDivision, setFilterDivision] = useState('all')
+
+  const DIVISIONS = ['Beauty Advisor', 'Host Live', 'Customer Service']
+  const filteredRequests = filterDivision === 'all'
+    ? requests
+    : requests.filter(r => r.user_division === filterDivision)
 
   useEffect(() => { fetchRequests() }, [activeTab])
 
@@ -96,17 +102,33 @@ export default function CertificateRequests() {
           })}
         </div>
 
+        {/* Division filter */}
+        <div className="flex items-center gap-2 flex-wrap pt-4 pb-1">
+          <span className="text-xs text-slate-500 font-medium">Division:</span>
+          <button
+            onClick={() => setFilterDivision('all')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${filterDivision === 'all' ? 'bg-slate-700 text-white' : 'border border-gray-200 text-slate-600 hover:bg-gray-50'}`}
+          >All</button>
+          {DIVISIONS.map(div => (
+            <button
+              key={div}
+              onClick={() => setFilterDivision(div)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${filterDivision === div ? 'bg-slate-700 text-white' : 'border border-gray-200 text-slate-600 hover:bg-gray-50'}`}
+            >{div}</button>
+          ))}
+        </div>
+
         <div className="py-8">
           {loading ? (
             <div className="text-center py-16 text-slate-500">Loading...</div>
-          ) : requests.length === 0 ? (
+          ) : filteredRequests.length === 0 ? (
             <div className="text-center py-16">
               <Award size={40} className="mx-auto text-slate-200 mb-3" />
               <p className="text-slate-500 font-medium">Tidak ada sertifikat {activeTab === 'pending' ? 'yang menunggu review' : activeTab === 'issued' ? 'yang disetujui' : 'yang ditolak'}</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {requests.map((req, idx) => (
+              {filteredRequests.map((req, idx) => (
                 <motion.div
                   key={req.id}
                   initial={{ opacity: 0, y: 10 }}

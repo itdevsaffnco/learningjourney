@@ -10,6 +10,9 @@ export default function Leaderboard() {
   const [streakLeaders, setStreakLeaders] = useState([])
   const [activeTab, setActiveTab] = useState('points')
   const [loading, setLoading] = useState(true)
+  const [filterDivision, setFilterDivision] = useState('all')
+
+  const DIVISIONS = ['Beauty Advisor', 'Host Live', 'Customer Service']
 
   const user = (() => { try { return JSON.parse(localStorage.getItem('user') || '{}') } catch { return {} } })()
   const isTrainer = user?.role === 'Trainer' || user?.role?.name === 'Trainer'
@@ -41,7 +44,10 @@ export default function Leaderboard() {
     }
   }
 
-  const data = activeTab === 'points' ? leaderboard : streakLeaders
+  const rawData = activeTab === 'points' ? leaderboard : streakLeaders
+  const data = filterDivision === 'all'
+    ? rawData
+    : rawData.filter(item => item.division === filterDivision)
 
   return (
     <main className="flex-1 overflow-y-auto bg-white">
@@ -87,6 +93,22 @@ export default function Leaderboard() {
             <Flame size={20} />
             Daily Streak
           </button>
+        </div>
+
+        {/* Division filter */}
+        <div className="flex items-center gap-2 flex-wrap pt-5 pb-1">
+          <span className="text-xs text-slate-500 font-medium">Division:</span>
+          <button
+            onClick={() => setFilterDivision('all')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${filterDivision === 'all' ? 'bg-slate-700 text-white' : 'border border-gray-200 text-slate-600 hover:bg-gray-50'}`}
+          >All</button>
+          {DIVISIONS.map(div => (
+            <button
+              key={div}
+              onClick={() => setFilterDivision(div)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${filterDivision === div ? 'bg-slate-700 text-white' : 'border border-gray-200 text-slate-600 hover:bg-gray-50'}`}
+            >{div}</button>
+          ))}
         </div>
 
         <div className="py-8">
