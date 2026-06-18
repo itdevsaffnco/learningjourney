@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import {
   Home, BookOpen, Trophy, FileText, CheckSquare, Gift,
   Medal, Bell, LogOut, Menu, X, Users, BarChart3,
-  Award, User
+  Award, User, ShoppingBag
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRole } from '../hooks/useRole'
@@ -28,6 +28,7 @@ export default function Sidebar({ user, mobileOpen = false, onMobileClose = () =
     { label: 'Leaderboard', icon: Trophy, path: '/leaderboard' },
     { label: 'Announcements', icon: Bell, path: '/trainer/announcements' },
     { label: 'User Management', icon: Users, path: '/admin/users' },
+    { label: 'Mystery Shopper', icon: ShoppingBag, path: '/trainer/mystery-shopper' },
     { label: 'Activity Logs', icon: BarChart3, path: '/trainer/logs' },
   ]
 
@@ -42,6 +43,7 @@ export default function Sidebar({ user, mobileOpen = false, onMobileClose = () =
     { label: 'Leaderboard', icon: Trophy, path: '/leaderboard' },
     { label: 'Announcements', icon: Bell, path: '/trainer/announcements' },
     { label: 'User Management', icon: Users, path: '/admin/users' },
+    { label: 'Mystery Shopper', icon: ShoppingBag, path: '/trainer/mystery-shopper' },
     { label: 'Activity Logs', icon: BarChart3, path: '/trainer/logs' },
   ]
 

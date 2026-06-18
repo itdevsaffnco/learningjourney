@@ -34,6 +34,7 @@ class ModuleController extends Controller
                     'description' => $module->description,
                     'duration' => $totalHours,
                     'objectives' => $module->objectives,
+                    'division_ids' => $module->division_ids,
                     'lessons' => $module->lessons_count,
                     'quizzes' => $module->quiz_lessons_count,
                     'assignments' => $module->assignments_count,
@@ -65,6 +66,8 @@ class ModuleController extends Controller
                 'description' => 'required|string',
                 'duration' => 'required|string',
                 'objectives' => 'nullable|string',
+                'division_ids' => 'nullable|array',
+                'division_ids.*' => 'integer',
             ]);
 
             // Set default level if not provided
@@ -76,6 +79,7 @@ class ModuleController extends Controller
                 'description' => $validated['description'],
                 'duration' => $validated['duration'],
                 'objectives' => $validated['objectives'] ?? '',
+                'division_ids' => !empty($validated['division_ids']) ? $validated['division_ids'] : null,
                 'created_by' => $request->user()->id,
                 'status' => 'published',
             ]);
@@ -89,6 +93,7 @@ class ModuleController extends Controller
                     'description' => $module->description,
                     'duration' => $module->duration,
                     'objectives' => $module->objectives,
+                    'division_ids' => $module->division_ids,
                     'created_by' => $module->created_by,
                     'lessons' => 0,
                     'quizzes' => 0,
@@ -133,7 +138,13 @@ class ModuleController extends Controller
             'description' => 'sometimes|string',
             'duration' => 'sometimes|string',
             'objectives' => 'nullable|string',
+            'division_ids' => 'nullable|array',
+            'division_ids.*' => 'integer',
         ]);
+
+        if (array_key_exists('division_ids', $validated)) {
+            $validated['division_ids'] = !empty($validated['division_ids']) ? $validated['division_ids'] : null;
+        }
 
         $module->update($validated);
 

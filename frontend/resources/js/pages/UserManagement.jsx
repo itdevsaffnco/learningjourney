@@ -7,6 +7,8 @@ export default function UserManagement({ user }) {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
+  const [filterRole, setFilterRole] = useState('all')
+  const [filterDivision, setFilterDivision] = useState('all')
   const [roleSearch, setRoleSearch] = useState('')
   const [showRoleDropdown, setShowRoleDropdown] = useState(false)
   const [divisionSearch, setDivisionSearch] = useState('')
@@ -179,10 +181,14 @@ export default function UserManagement({ user }) {
     setShowForm(true)
   }
 
-  const filteredUsers = users.filter(u =>
-    u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.email.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredUsers = users.filter(u => {
+    const matchSearch = !searchTerm ||
+      u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.email.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchRole = filterRole === 'all' || u.role?.name === filterRole
+    const matchDivision = filterDivision === 'all' || u.division?.name === filterDivision
+    return matchSearch && matchRole && matchDivision
+  })
 
   const getRoleColor = (role) => {
     const colors = {
@@ -314,7 +320,8 @@ export default function UserManagement({ user }) {
                             <button
                               key={role.id}
                               type="button"
-                              onClick={() => {
+                              onMouseDown={(e) => {
+                                e.preventDefault()
                                 setFormData({ ...formData, role_id: role.id })
                                 setRoleSearch(role.name)
                                 setShowRoleDropdown(false)
@@ -353,7 +360,8 @@ export default function UserManagement({ user }) {
                             <button
                               key={div.id}
                               type="button"
-                              onClick={() => {
+                              onMouseDown={(e) => {
+                                e.preventDefault()
                                 setFormData({ ...formData, division_id: div.id })
                                 setDivisionSearch(div.name)
                                 setShowDivisionDropdown(false)
@@ -367,7 +375,7 @@ export default function UserManagement({ user }) {
                         {divisionSearch && (
                           <button
                             type="button"
-                            onClick={() => setShowDivisionCreate(true)}
+                            onMouseDown={(e) => { e.preventDefault(); setShowDivisionCreate(true) }}
                             className="w-full text-left px-4 py-2 text-slate-700 hover:bg-gray-50 transition-colors flex items-center gap-2 border-t border-gray-200 font-medium"
                           >
                             <Plus className="w-4 h-4" />
@@ -414,6 +422,19 @@ export default function UserManagement({ user }) {
                     </motion.div>
                   )}
                 </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-900 mb-2">
+                    Store Location <span className="text-slate-400 font-normal">(optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.store_location}
+                    onChange={(e) => setFormData({ ...formData, store_location: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-slate-700 focus:border-slate-700 focus:outline-none text-slate-900"
+                    placeholder="e.g. Jakarta Selatan, Grand Indonesia"
+                  />
+                </div>
               </div>
 
               <div className="flex gap-3 justify-end pt-4">
@@ -436,25 +457,13 @@ export default function UserManagement({ user }) {
                 >
                   {editingId ? 'Update User' : 'Create User'}
                 </button>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-900 mb-2">
-                    Store Location <span className="text-slate-400 font-normal">(optional)</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.store_location}
-                    onChange={(e) => setFormData({ ...formData, store_location: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-slate-700 focus:border-slate-700 focus:outline-none text-slate-900"
-                    placeholder="e.g. Jakarta Selatan, Grand Indonesia"
-                  />
-                </div>
               </div>
             </form>
           </motion.div>
         )}
 
-        {/* Search */}
-        <div className="mb-6">
+        {/* Search & Filters */}
+        <div className="mb-6 space-y-3">
           <input
             type="text"
             placeholder="Search by name or email..."
@@ -462,6 +471,50 @@ export default function UserManagement({ user }) {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-1 focus:ring-slate-700 focus:border-slate-700 focus:outline-none text-slate-900"
           />
+
+          <div className="flex flex-wrap gap-2 items-center">
+            {/* Role filter */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-slate-500 font-medium">Role:</span>
+              {['all', 'Admin', 'Trainer', 'Staff'].map(r => (
+                <button key={r} onClick={() => setFilterRole(r)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${filterRole === r ? 'bg-slate-700 text-white' : 'border border-gray-200 text-slate-600 hover:bg-gray-50'}`}
+                >
+                  {r === 'all' ? 'All' : r}
+                </button>
+              ))}
+            </div>
+
+            <div className="w-px h-5 bg-gray-200 mx-1" />
+
+            {/* Division filter */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-xs text-slate-500 font-medium">Division:</span>
+              <button onClick={() => setFilterDivision('all')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${filterDivision === 'all' ? 'bg-slate-700 text-white' : 'border border-gray-200 text-slate-600 hover:bg-gray-50'}`}
+              >All</button>
+              {divisions.map(div => (
+                <button key={div.id} onClick={() => setFilterDivision(div.name)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${filterDivision === div.name ? 'bg-slate-700 text-white' : 'border border-gray-200 text-slate-600 hover:bg-gray-50'}`}
+                >
+                  {div.name}
+                </button>
+              ))}
+            </div>
+
+            {/* Clear filters */}
+            {(filterRole !== 'all' || filterDivision !== 'all' || searchTerm) && (
+              <button onClick={() => { setFilterRole('all'); setFilterDivision('all'); setSearchTerm('') }}
+                className="ml-auto text-xs text-slate-500 hover:text-slate-800 underline transition-colors"
+              >
+                Reset filter
+              </button>
+            )}
+          </div>
+
+          {(filterRole !== 'all' || filterDivision !== 'all' || searchTerm) && (
+            <p className="text-xs text-slate-500">{filteredUsers.length} user ditemukan</p>
+          )}
         </div>
 
         {/* Users Table */}

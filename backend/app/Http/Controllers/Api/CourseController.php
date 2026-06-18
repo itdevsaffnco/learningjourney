@@ -130,7 +130,17 @@ class CourseController extends Controller
 
     public function modules(Request $request)
     {
-        $modules = Module::with('lessons')->paginate(10);
+        $user = $request->user();
+        $divisionId = $user->division_id;
+
+        $modules = Module::with('lessons')
+            ->where(function ($q) use ($divisionId) {
+                // null division_ids = visible to all
+                $q->whereNull('division_ids')
+                  ->orWhere('division_ids', '[]')
+                  ->orWhereJsonContains('division_ids', $divisionId);
+            })
+            ->paginate(10);
 
         return response()->json($modules);
     }

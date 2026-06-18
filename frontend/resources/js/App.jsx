@@ -31,6 +31,9 @@ const Certificates = lazy(() => import('./pages/Certificates'))
 const CertificateRequests = lazy(() => import('./pages/CertificateRequests'))
 const CourseLearn = lazy(() => import('./pages/CourseLearn'))
 const AnnouncementsPage = lazy(() => import('./pages/Announcements'))
+const MysteryShopperManager = lazy(() => import('./pages/MysteryShopperManager'))
+const MysteryShopperForm = lazy(() => import('./pages/MysteryShopperForm'))
+const MysteryShopperPublic = lazy(() => import('./pages/MysteryShopperPublic'))
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -89,6 +92,9 @@ export default function App() {
         {/* Public Assignment Submission */}
         <Route path="/assignments/:assignmentId" element={<AssignmentSubmit />} />
 
+        {/* Public Mystery Shopper Form - no login required */}
+        <Route path="/mystery-shopper/fill" element={<MysteryShopperPublic />} />
+
         {isAuthenticated && (
           <Route element={<ProtectedLayout user={user} />}>
             {/* Default/Staff Routes */}
@@ -123,6 +129,9 @@ export default function App() {
             <Route path="/certificates" element={<Certificates user={user} />} />
             <Route path="/announcements" element={<AnnouncementsPage user={user} />} />
             <Route path="/account" element={<Account user={user} />} />
+
+            {/* Mystery Shopper - trainer/admin only */}
+            <Route path="/trainer/mystery-shopper" element={<MysteryShopperManager user={user} />} />
 
             {/* Default Route */}
             <Route path="/" element={<Navigate to="/dashboard" />} />

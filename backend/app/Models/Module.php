@@ -15,6 +15,11 @@ class Module extends Model
         'created_by',
         'status',
         'course_id',
+        'division_ids',
+    ];
+
+    protected $casts = [
+        'division_ids' => 'array',
     ];
 
     public function lessons()

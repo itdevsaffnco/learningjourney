@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\QuizController;
 use App\Http\Controllers\Api\AssignmentController;
 use App\Http\Controllers\Api\LeaderboardController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\MysteryShopperController;
 
 Route::middleware('api')->group(function () {
     // Public Auth Routes (No authentication required)
@@ -20,6 +21,10 @@ Route::middleware('api')->group(function () {
     // Public Assignment Submission
     Route::get('/assignments/{id}', [AssignmentController::class, 'show']);
     Route::post('/assignments/{id}/submit', [AssignmentController::class, 'submitPublic']);
+
+    // Public Mystery Shopper (no login required)
+    Route::get('/mystery-shopper/public/questions', [MysteryShopperController::class, 'questions']);
+    Route::post('/mystery-shopper/public/submit', [MysteryShopperController::class, 'submitPublic']);
 
     Route::middleware('auth:sanctum')->group(function () {
         // Auth Management
@@ -70,8 +75,14 @@ Route::middleware('api')->group(function () {
         Route::get('/leaderboard/division/{divisionId}', [LeaderboardController::class, 'byDivision']);
         Route::get('/leaderboard/streak', [LeaderboardController::class, 'streak']);
 
+        // Mystery Shopper - questions visible to all, submit for staff
+        Route::get('/mystery-shopper/questions', [MysteryShopperController::class, 'questions']);
+
         // === STAFF ONLY ROUTES ===
         Route::middleware('staff')->group(function () {
+            // Mystery Shopper - staff can submit
+            Route::post('/mystery-shopper/submit', [MysteryShopperController::class, 'submit']);
+
             // Complete Lessons
             Route::post('/lessons/{id}/progress', [CourseController::class, 'updateLessonProgress']);
 
@@ -167,6 +178,14 @@ Route::middleware('api')->group(function () {
             Route::post('/announcements', [UserController::class, 'createAnnouncement']);
             Route::put('/announcements/{id}', [UserController::class, 'updateAnnouncement']);
             Route::delete('/announcements/{id}', [UserController::class, 'deleteAnnouncement']);
+
+            // Mystery Shopper Management
+            Route::post('/mystery-shopper/questions', [MysteryShopperController::class, 'createQuestion']);
+            Route::put('/mystery-shopper/questions/{id}', [MysteryShopperController::class, 'updateQuestion']);
+            Route::delete('/mystery-shopper/questions/{id}', [MysteryShopperController::class, 'deleteQuestion']);
+            Route::post('/mystery-shopper/questions/reorder', [MysteryShopperController::class, 'reorderQuestions']);
+            Route::get('/mystery-shopper/submissions', [MysteryShopperController::class, 'submissions']);
+            Route::get('/mystery-shopper/submissions/{id}', [MysteryShopperController::class, 'submissionDetail']);
 
             // Certificate Requests
             Route::get('/trainer/certificate-requests', [UserController::class, 'certificateRequests']);
