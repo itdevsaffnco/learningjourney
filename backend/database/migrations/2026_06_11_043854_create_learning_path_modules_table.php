@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('learning_path_modules')) return;
         Schema::create('learning_path_modules', function (Blueprint $table) {
             $table->id();
             $table->foreignId('learning_path_id')->constrained('learning_paths')->onDelete('cascade');

@@ -11,14 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('assignment_questions', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('assignment_id')->constrained('assignments')->onDelete('cascade');
-            $table->text('question');
-            $table->enum('type', ['multiple_choice', 'essay'])->default('multiple_choice');
-            $table->integer('order')->default(0);
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('assignment_questions')) {
+            Schema::create('assignment_questions', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('assignment_id')->constrained('assignments')->onDelete('cascade');
+                $table->text('question');
+                $table->enum('type', ['multiple_choice', 'essay'])->default('multiple_choice');
+                $table->integer('order')->default(0);
+                $table->timestamps();
+            });
+        }
     }
 
     /**
