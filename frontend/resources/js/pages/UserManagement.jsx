@@ -9,12 +9,6 @@ export default function UserManagement({ user }) {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterRole, setFilterRole] = useState('all')
   const [filterDivision, setFilterDivision] = useState('all')
-  const [roleSearch, setRoleSearch] = useState('')
-  const [showRoleDropdown, setShowRoleDropdown] = useState(false)
-  const [divisionSearch, setDivisionSearch] = useState('')
-  const [showDivisionDropdown, setShowDivisionDropdown] = useState(false)
-  const [showDivisionCreate, setShowDivisionCreate] = useState(false)
-  const [newDivisionName, setNewDivisionName] = useState('')
   const [roles, setRoles] = useState([])
   const [divisions, setDivisions] = useState([])
   const [successMessage, setSuccessMessage] = useState(null)
@@ -138,34 +132,6 @@ export default function UserManagement({ user }) {
     }
   }
 
-  const handleCreateDivision = async () => {
-    if (!newDivisionName.trim()) return
-
-    try {
-      const token = localStorage.getItem('token')
-      const response = await fetch('/api/divisions', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name: newDivisionName }),
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        const newDivision = data.data || data
-        setDivisions([...divisions, newDivision])
-        setFormData({ ...formData, division_id: newDivision.id })
-        setNewDivisionName('')
-        setShowDivisionCreate(false)
-        setDivisionSearch('')
-      }
-    } catch (error) {
-      console.error('Failed to create division:', error)
-    }
-  }
-
   const handleEdit = (userData) => {
     setFormData({
       name: userData.name,
@@ -175,8 +141,6 @@ export default function UserManagement({ user }) {
       role_id: userData.role?.id || '',
       store_location: userData.store_location || '',
     })
-    setRoleSearch(userData.role?.name || '')
-    setDivisionSearch(userData.division?.name || '')
     setEditingId(userData.id)
     setShowForm(true)
   }
@@ -221,8 +185,6 @@ export default function UserManagement({ user }) {
               setShowForm(!showForm)
               setEditingId(null)
               setFormData({ name: '', email: '', password: '', division_id: '', role_id: '', store_location: '' })
-              setRoleSearch('')
-              setDivisionSearch('')
             }}
             className="flex items-center gap-2 px-6 py-3 bg-slate-700 hover:bg-slate-800 text-white rounded-lg transition-colors font-medium"
           >
@@ -297,134 +259,33 @@ export default function UserManagement({ user }) {
                   </div>
                 )}
 
-                <div className="relative">
+                <div>
                   <label className="block text-sm font-semibold text-slate-900 mb-2">Role</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="Select or search role..."
-                      value={roleSearch}
-                      onChange={(e) => setRoleSearch(e.target.value)}
-                      onFocus={() => {
-                        setShowRoleDropdown(true)
-                      }}
-                      onBlur={() => setTimeout(() => setShowRoleDropdown(false), 200)}
-                      className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-slate-700 focus:border-slate-700 focus:outline-none text-slate-900"
-                    />
-
-                    {showRoleDropdown && (
-                      <div
-                        className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto"
-                        onMouseDown={(e) => e.preventDefault()}
-                      >
-                        {roles
-                          .filter(role => !roleSearch || role.name.toLowerCase().includes(roleSearch.toLowerCase()))
-                          .map(role => (
-                            <button
-                              key={role.id}
-                              type="button"
-                              onClick={() => {
-                                setFormData(prev => ({ ...prev, role_id: role.id }))
-                                setRoleSearch(role.name)
-                                setShowRoleDropdown(false)
-                              }}
-                              className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
-                            >
-                              {role.name}
-                            </button>
-                          ))}
-                      </div>
-                    )}
-                  </div>
+                  <select
+                    value={formData.role_id}
+                    onChange={(e) => setFormData(prev => ({ ...prev, role_id: e.target.value }))}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-slate-700 focus:border-slate-700 focus:outline-none text-slate-900 bg-white"
+                    required
+                  >
+                    <option value="">Select role...</option>
+                    {roles.map(role => (
+                      <option key={role.id} value={role.id}>{role.name}</option>
+                    ))}
+                  </select>
                 </div>
 
-                <div className="relative">
+                <div>
                   <label className="block text-sm font-semibold text-slate-900 mb-2">Division</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="Select or search division..."
-                      value={divisionSearch}
-                      onChange={(e) => setDivisionSearch(e.target.value)}
-                      onFocus={() => {
-                        setShowDivisionDropdown(true)
-                        setShowDivisionCreate(false)
-                      }}
-                      onBlur={() => setTimeout(() => setShowDivisionDropdown(false), 200)}
-                      className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-slate-700 focus:border-slate-700 focus:outline-none text-slate-900"
-                    />
-
-                    {showDivisionDropdown && (
-                      <div
-                        className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto"
-                        onMouseDown={(e) => e.preventDefault()}
-                      >
-                        {divisions
-                          .filter(div => !divisionSearch || div.name.toLowerCase().includes(divisionSearch.toLowerCase()))
-                          .map(div => (
-                            <button
-                              key={div.id}
-                              type="button"
-                              onClick={() => {
-                                setFormData(prev => ({ ...prev, division_id: div.id }))
-                                setDivisionSearch(div.name)
-                                setShowDivisionDropdown(false)
-                              }}
-                              className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
-                            >
-                              {div.name}
-                            </button>
-                          ))}
-
-                        {divisionSearch && (
-                          <button
-                            type="button"
-                            onClick={() => setShowDivisionCreate(true)}
-                            className="w-full text-left px-4 py-2 text-slate-700 hover:bg-gray-50 transition-colors flex items-center gap-2 border-t border-gray-200 font-medium"
-                          >
-                            <Plus className="w-4 h-4" />
-                            Tambah "{divisionSearch}"
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Create Division Form */}
-                  {showDivisionCreate && divisionSearch && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-20"
-                    >
-                      <p className="text-sm font-medium text-slate-900 mb-3">Create new division</p>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={newDivisionName}
-                          onChange={(e) => setNewDivisionName(e.target.value)}
-                          placeholder="Division name..."
-                          className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-slate-700 focus:border-slate-700 focus:outline-none text-sm text-slate-900"
-                          onKeyPress={(e) => e.key === 'Enter' && handleCreateDivision()}
-                          autoFocus
-                        />
-                        <button
-                          type="button"
-                          onClick={handleCreateDivision}
-                          className="px-3 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-lg transition-colors text-sm font-medium whitespace-nowrap"
-                        >
-                          Create
-                        </button>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setShowDivisionCreate(false)}
-                        className="w-full mt-2 px-3 py-2 text-slate-600 hover:bg-gray-50 rounded-lg transition-colors text-sm"
-                      >
-                        Cancel
-                      </button>
-                    </motion.div>
-                  )}
+                  <select
+                    value={formData.division_id}
+                    onChange={(e) => setFormData(prev => ({ ...prev, division_id: e.target.value }))}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-slate-700 focus:border-slate-700 focus:outline-none text-slate-900 bg-white"
+                  >
+                    <option value="">Select division...</option>
+                    {divisions.map(div => (
+                      <option key={div.id} value={div.id}>{div.name}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
