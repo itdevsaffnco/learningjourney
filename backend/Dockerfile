@@ -31,6 +31,7 @@ RUN mkdir -p bootstrap/cache storage/logs storage/framework/cache storage/framew
     && chmod -R 755 storage bootstrap/cache
 
 COPY docker/nginx.conf /etc/nginx/nginx.conf
+COPY docker/php-uploads.ini /usr/local/etc/php/conf.d/uploads.ini
 COPY deploy.sh /deploy.sh
 RUN chmod +x /deploy.sh
 
