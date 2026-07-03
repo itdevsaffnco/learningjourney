@@ -504,7 +504,7 @@ export default function LessonManager() {
       return
     }
     if (formData.type === 'video' && !formData.video_url.trim()) {
-      alert('Please upload a video file')
+      alert('Please enter a video URL')
       return
     }
     if (formData.type === 'audio' && !formData.audio_url.trim()) {
@@ -730,23 +730,17 @@ export default function LessonManager() {
                   {formData.type === 'video' && (
                     <>
                       <div>
-                        <label className="block text-sm font-semibold text-slate-900 mb-3">
-                          Video File (MP4 only)
+                        <label className="block text-sm font-semibold text-slate-900 mb-2">
+                          Video URL
                         </label>
+                        <p className="text-xs text-slate-500 mb-2">Paste link dari YouTube, Google Drive, atau Vimeo</p>
                         <input
-                          ref={videoInputRef}
-                          type="file"
-                          accept="video/mp4"
-                          onChange={handleVideoSelect}
-                          className="hidden"
+                          type="url"
+                          value={formData.video_url}
+                          onChange={(e) => setFormData(prev => ({ ...prev, video_url: e.target.value }))}
+                          placeholder="https://youtube.com/watch?v=... atau https://drive.google.com/..."
+                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-1 focus:ring-slate-700 focus:border-slate-700 focus:outline-none text-slate-900 placeholder-slate-400 text-sm"
                         />
-                        <button
-                          type="button"
-                          onClick={() => videoInputRef.current?.click()}
-                          className="w-full px-4 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left text-slate-900 font-medium"
-                        >
-                          {videoFileName ? `✓ ${videoFileName}` : '+ Upload MP4 Video'}
-                        </button>
                       </div>
 
                       <div>

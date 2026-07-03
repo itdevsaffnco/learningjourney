@@ -588,14 +588,26 @@ export default function LearnLesson() {
               >
                 {/* Video Player */}
                 <div className="bg-black rounded-lg overflow-hidden aspect-video">
-                  <video
-                    controls
-                    className="w-full h-full"
-                    poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'%3E%3Crect fill='%23222' width='1280' height='720'/%3E%3C/svg%3E"
-                  >
-                    <source src={lessonContent?.videoUrl} type="video/mp4" />
-                    Your browser does not support the video tag.
-                  </video>
+                  {(() => {
+                    const url = lessonContent?.videoUrl || ''
+                    const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/)
+                    const driveMatch = url.match(/drive\.google\.com\/file\/d\/([^/]+)/)
+                    const vimeoMatch = url.match(/vimeo\.com\/(\d+)/)
+                    if (ytMatch) {
+                      return <iframe className="w-full h-full" src={`https://www.youtube.com/embed/${ytMatch[1]}`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+                    } else if (driveMatch) {
+                      return <iframe className="w-full h-full" src={`https://drive.google.com/file/d/${driveMatch[1]}/preview`} allow="autoplay" allowFullScreen />
+                    } else if (vimeoMatch) {
+                      return <iframe className="w-full h-full" src={`https://player.vimeo.com/video/${vimeoMatch[1]}`} allow="autoplay; fullscreen" allowFullScreen />
+                    } else {
+                      return (
+                        <video controls className="w-full h-full">
+                          <source src={url} type="video/mp4" />
+                          Your browser does not support the video tag.
+                        </video>
+                      )
+                    }
+                  })()}
                 </div>
 
                 {/* Video Info */}
