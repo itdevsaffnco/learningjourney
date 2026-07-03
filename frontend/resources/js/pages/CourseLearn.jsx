@@ -288,20 +288,24 @@ export default function CourseLearn() {
             {/* Video lesson */}
             {currentLesson.type === 'video' && currentLesson.video_url && (
               <motion.div key={currentLesson.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                {currentLesson.video_url.startsWith('data:video') ? (
-                  <video
-                    src={currentLesson.video_url}
-                    controls
-                    className="w-full rounded-lg shadow-md"
-                    onEnded={markComplete}
-                  />
-                ) : (
-                  <iframe
-                    src={currentLesson.video_url}
-                    className="w-full aspect-video rounded-lg shadow-md"
-                    allowFullScreen
-                  />
-                )}
+                {(() => {
+                  const url = currentLesson.video_url
+                  const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/)
+                  const driveMatch = url.match(/drive\.google\.com\/file\/d\/([^/]+)/)
+                  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/)
+                  if (ytMatch) return (
+                    <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} className="w-full aspect-video rounded-lg shadow-md" allowFullScreen />
+                  )
+                  if (driveMatch) return (
+                    <iframe src={`https://drive.google.com/file/d/${driveMatch[1]}/preview`} className="w-full aspect-video rounded-lg shadow-md" allowFullScreen />
+                  )
+                  if (vimeoMatch) return (
+                    <iframe src={`https://player.vimeo.com/video/${vimeoMatch[1]}`} className="w-full aspect-video rounded-lg shadow-md" allowFullScreen />
+                  )
+                  return (
+                    <video src={url} controls className="w-full rounded-lg shadow-md" onEnded={markComplete} />
+                  )
+                })()}
                 {currentLesson.content && currentLesson.content !== '<p></p>' && (
                   <div
                     className="mt-6 prose prose-slate max-w-none"
