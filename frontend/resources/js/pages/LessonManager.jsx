@@ -197,6 +197,7 @@ export default function LessonManager() {
   const [editingLessonId, setEditingLessonId] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [videoFileName, setVideoFileName] = useState('')
+  const [videoFile, setVideoFile] = useState(null)
   const [audioFileName, setAudioFileName] = useState('')
   const [quizzes, setQuizzes] = useState([])
   const [reorderingLessonId, setReorderingLessonId] = useState(null)
@@ -440,22 +441,15 @@ export default function LessonManager() {
     }
   }
 
-  const handleVideoSelect = async (e) => {
+  const handleVideoSelect = (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-
-    if (file.type !== 'video/mp4') {
-      alert('Only MP4 format is supported')
+    if (!file.type.startsWith('video/')) {
+      alert('Please select a video file')
       return
     }
-
+    setVideoFile(file)
     setVideoFileName(file.name)
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      const base64 = event.target?.result
-      setFormData({ ...formData, video_url: base64 })
-    }
-    reader.readAsDataURL(file)
   }
 
   const handleAudioSelect = (e) => {
@@ -486,6 +480,7 @@ export default function LessonManager() {
       num_questions_to_show: '',
     })
     setVideoFileName('')
+    setVideoFile(null)
     setAudioFileName('')
     editor?.commands.clearContent()
     setEditingLessonId(null)
@@ -503,8 +498,8 @@ export default function LessonManager() {
       alert('Please enter lesson content')
       return
     }
-    if (formData.type === 'video' && !formData.video_url.trim()) {
-      alert('Please enter a video URL')
+    if (formData.type === 'video' && !videoFile && !formData.video_url) {
+      alert('Please upload a video file')
       return
     }
     if (formData.type === 'audio' && !formData.audio_url.trim()) {
@@ -520,50 +515,60 @@ export default function LessonManager() {
       setSubmitting(true)
       const token = localStorage.getItem('token')
 
-      // Convert duration to minutes
       let durationMinutes = 0
       if (formData.duration.value) {
         const value = parseInt(formData.duration.value)
         switch (formData.duration.unit) {
-          case 'hours':
-            durationMinutes = value * 60
-            break
-          case 'days':
-            durationMinutes = value * 24 * 60
-            break
-          case 'weeks':
-            durationMinutes = value * 7 * 24 * 60
-            break
-          default:
-            durationMinutes = value
+          case 'hours': durationMinutes = value * 60; break
+          case 'days': durationMinutes = value * 24 * 60; break
+          case 'weeks': durationMinutes = value * 7 * 24 * 60; break
+          default: durationMinutes = value
         }
       }
 
-      const payload = {
-        title: formData.title,
-        description: formData.description,
-        type: formData.type,
-        duration_minutes: durationMinutes,
-        ...(formData.type === 'text' && { content: editor?.getHTML() }),
-        ...(formData.type === 'video' && { video_url: formData.video_url, content: editor?.getHTML() }),
-        ...(formData.type === 'audio' && { audio_url: formData.audio_url, content: editor?.getHTML() }),
-        ...(formData.type === 'quiz' && {
-          quiz_id: formData.quiz_id,
-          randomize_questions: formData.randomize_questions,
-          num_questions_to_show: formData.num_questions_to_show ? parseInt(formData.num_questions_to_show) : null,
-        }),
-      }
+      // Use FormData when uploading a video file, JSON otherwise
+      if (formData.type === 'video' && videoFile) {
+        const fd = new FormData()
+        fd.append('title', formData.title)
+        fd.append('description', formData.description || '')
+        fd.append('type', 'video')
+        fd.append('duration_minutes', durationMinutes)
+        fd.append('content', editor?.getHTML() || '')
+        fd.append('video', videoFile)
+        if (editingLessonId) fd.append('_method', 'PUT')
 
-      if (editingLessonId) {
-        const response = await axios.put(`/api/modules/${moduleId}/lessons/${editingLessonId}`, payload, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        console.log('Update response:', response.data)
+        await axios.post(
+          editingLessonId
+            ? `/api/modules/${moduleId}/lessons/${editingLessonId}`
+            : `/api/modules/${moduleId}/lessons`,
+          fd,
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
       } else {
-        const response = await axios.post(`/api/modules/${moduleId}/lessons`, payload, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        console.log('Create response:', response.data)
+        const payload = {
+          title: formData.title,
+          description: formData.description,
+          type: formData.type,
+          duration_minutes: durationMinutes,
+          ...(formData.type === 'text' && { content: editor?.getHTML() }),
+          ...(formData.type === 'video' && { video_url: formData.video_url, content: editor?.getHTML() }),
+          ...(formData.type === 'audio' && { audio_url: formData.audio_url, content: editor?.getHTML() }),
+          ...(formData.type === 'quiz' && {
+            quiz_id: formData.quiz_id,
+            randomize_questions: formData.randomize_questions,
+            num_questions_to_show: formData.num_questions_to_show ? parseInt(formData.num_questions_to_show) : null,
+          }),
+        }
+
+        if (editingLessonId) {
+          await axios.put(`/api/modules/${moduleId}/lessons/${editingLessonId}`, payload, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+        } else {
+          await axios.post(`/api/modules/${moduleId}/lessons`, payload, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+        }
       }
 
       resetForm()
@@ -731,16 +736,27 @@ export default function LessonManager() {
                     <>
                       <div>
                         <label className="block text-sm font-semibold text-slate-900 mb-2">
-                          Video URL
+                          Video File
                         </label>
-                        <p className="text-xs text-slate-500 mb-2">Paste link dari YouTube, Google Drive, atau Vimeo</p>
+                        <p className="text-xs text-slate-500 mb-2">MP4, MOV, AVI — maks. 100MB</p>
                         <input
-                          type="url"
-                          value={formData.video_url}
-                          onChange={(e) => setFormData(prev => ({ ...prev, video_url: e.target.value }))}
-                          placeholder="https://youtube.com/watch?v=... atau https://drive.google.com/..."
-                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-1 focus:ring-slate-700 focus:border-slate-700 focus:outline-none text-slate-900 placeholder-slate-400 text-sm"
+                          ref={videoInputRef}
+                          type="file"
+                          accept="video/*"
+                          onChange={handleVideoSelect}
+                          className="hidden"
                         />
+                        <button
+                          type="button"
+                          onClick={() => videoInputRef.current?.click()}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left text-slate-900 font-medium"
+                        >
+                          {videoFileName
+                            ? `✓ ${videoFileName}`
+                            : formData.video_url
+                            ? '✓ Video tersimpan (klik untuk ganti)'
+                            : '+ Upload Video'}
+                        </button>
                       </div>
 
                       <div>

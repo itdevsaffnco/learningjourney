@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Models\Lesson;
 use App\Models\Module;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\Controller;
 
 class LessonController extends Controller
@@ -28,6 +29,7 @@ class LessonController extends Controller
             "description" => "nullable|string",
             "type" => "required|in:text,video,audio,quiz",
             "content" => "nullable|string",
+            "video" => "nullable|file|mimes:mp4,mov,avi,webm|max:102400",
             "video_url" => "nullable|string",
             "audio_url" => "nullable|string",
             "quiz_id" => "nullable|exists:quizzes,id",
@@ -49,7 +51,12 @@ class LessonController extends Controller
             if ($validated["type"] === "text") {
                 $lesson->content = $validated["content"] ?? null;
             } elseif ($validated["type"] === "video") {
-                $lesson->video_url = $validated["video_url"] ?? null;
+                if ($request->hasFile('video')) {
+                    $path = $request->file('video')->store('videos', 'public');
+                    $lesson->video_url = Storage::url($path);
+                } else {
+                    $lesson->video_url = $validated["video_url"] ?? null;
+                }
                 $lesson->content = $validated["content"] ?? null;
             } elseif ($validated["type"] === "audio") {
                 $lesson->audio_url = $validated["audio_url"] ?? null;
@@ -92,6 +99,7 @@ class LessonController extends Controller
             "description" => "nullable|string",
             "type" => "sometimes|in:text,video,audio,quiz",
             "content" => "nullable|string",
+            "video" => "nullable|file|mimes:mp4,mov,avi,webm|max:102400",
             "video_url" => "nullable|string",
             "audio_url" => "nullable|string",
             "quiz_id" => "nullable|exists:quizzes,id",
@@ -102,6 +110,11 @@ class LessonController extends Controller
         ]);
 
         try {
+            if ($request->hasFile('video')) {
+                $path = $request->file('video')->store('videos', 'public');
+                $validated["video_url"] = Storage::url($path);
+            }
+
             if (isset($validated["type"])) {
                 if ($validated["type"] === "text") {
                     $validated["video_url"] = null;
@@ -120,6 +133,7 @@ class LessonController extends Controller
                 }
             }
 
+            unset($validated["video"]);
             $lesson->update($validated);
 
             return response()->json([
