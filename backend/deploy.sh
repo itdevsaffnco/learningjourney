@@ -33,5 +33,9 @@ php artisan storage:link --force 2>/dev/null || true
 echo "==> Fixing storage permissions..."
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
+echo "==> Setting up nginx temp directories..."
+mkdir -p /tmp/nginx_body_temp
+chown -R www-data:www-data /tmp/nginx_body_temp
+
 echo "==> Starting Nginx..."
 exec nginx -g "daemon off;"
