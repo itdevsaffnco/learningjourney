@@ -136,6 +136,22 @@
   height: 0;
 }
 
+.lesson-content-preview p { margin-bottom: 0.75rem; color: #1e293b; line-height: 1.7; }
+.lesson-content-preview h1, .lesson-content-preview h2, .lesson-content-preview h3 { margin-top: 1.25rem; margin-bottom: 0.5rem; font-weight: 700; color: #0f172a; }
+.lesson-content-preview h1 { font-size: 1.875rem; }
+.lesson-content-preview h2 { font-size: 1.5rem; }
+.lesson-content-preview h3 { font-size: 1.25rem; }
+.lesson-content-preview strong { font-weight: 700; }
+.lesson-content-preview em { font-style: italic; }
+.lesson-content-preview ul, .lesson-content-preview ol { margin-bottom: 1rem; padding-left: 1.5rem; }
+.lesson-content-preview ul { list-style-type: disc; }
+.lesson-content-preview ol { list-style-type: decimal; }
+.lesson-content-preview li { margin-bottom: 0.25rem; }
+.lesson-content-preview a { color: #334155; text-decoration: underline; }
+.lesson-content-preview blockquote { border-left: 4px solid #cbd5e1; padding-left: 1rem; margin: 0 0 1rem 0; color: #64748b; font-style: italic; }
+.lesson-content-preview code { background-color: #f1f5f9; border-radius: 0.375rem; padding: 0.25rem 0.5rem; font-family: monospace; font-size: 0.875rem; color: #334155; }
+.lesson-content-preview img { max-width: 100%; height: auto; border-radius: 0.5rem; margin: 0.5rem 0; }
+
 .image-container {
   position: relative;
   display: inline-block;

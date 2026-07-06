@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Plus, X, Edit2, Trash2, ArrowLeft, Bold, Italic, List, ListOrdered, Quote, Link2, Image as ImageIcon, AlignLeft, AlignCenter, AlignRight, ChevronUp, ChevronDown } from 'lucide-react'
+import { Plus, X, Edit2, Trash2, ArrowLeft, Bold, Italic, List, ListOrdered, Quote, Link2, Image as ImageIcon, AlignLeft, AlignCenter, AlignRight, ChevronUp, ChevronDown, Eye } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import axios from 'axios'
 import { useEditor, EditorContent } from '@tiptap/react'
@@ -201,6 +201,7 @@ export default function LessonManager() {
   const [audioFileName, setAudioFileName] = useState('')
   const [quizzes, setQuizzes] = useState([])
   const [reorderingLessonId, setReorderingLessonId] = useState(null)
+  const [previewLesson, setPreviewLesson] = useState(null)
   const videoInputRef = useRef(null)
   const audioInputRef = useRef(null)
   const [formData, setFormData] = useState({
@@ -916,6 +917,105 @@ export default function LessonManager() {
         )}
       </AnimatePresence>
 
+      {/* Preview Modal */}
+      <AnimatePresence>
+        {previewLesson && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setPreviewLesson(null)}
+              className="fixed inset-0 bg-black/60 z-40"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="fixed inset-0 flex items-center justify-center z-50 p-4"
+            >
+              <div className="bg-white rounded-xl shadow-xl border border-gray-200 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+                {/* Preview Header */}
+                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-slate-50 rounded-t-xl sticky top-0">
+                  <div className="flex items-center gap-3">
+                    <Eye size={20} className="text-slate-600" />
+                    <div>
+                      <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">Preview — tampilan Staff</p>
+                      <h2 className="text-lg font-bold text-slate-900">{previewLesson.title}</h2>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setPreviewLesson(null)}
+                    className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
+                  >
+                    <X size={20} className="text-slate-600" />
+                  </button>
+                </div>
+
+                {/* Preview Body */}
+                <div className="p-6 space-y-6">
+                  {/* Video */}
+                  {previewLesson.type === 'video' && previewLesson.video_url && (() => {
+                    const url = previewLesson.video_url
+                    const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/)
+                    const driveMatch = url.match(/drive\.google\.com\/file\/d\/([^/]+)/)
+                    const vimeoMatch = url.match(/vimeo\.com\/(\d+)/)
+                    if (ytMatch) return <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} className="w-full aspect-video rounded-lg shadow-md" allowFullScreen />
+                    if (driveMatch) return <iframe src={`https://drive.google.com/file/d/${driveMatch[1]}/preview`} className="w-full aspect-video rounded-lg shadow-md" allowFullScreen />
+                    if (vimeoMatch) return <iframe src={`https://player.vimeo.com/video/${vimeoMatch[1]}`} className="w-full aspect-video rounded-lg shadow-md" allowFullScreen />
+                    return <video src={url} controls className="w-full rounded-lg shadow-md" />
+                  })()}
+
+                  {/* Audio */}
+                  {previewLesson.type === 'audio' && previewLesson.audio_url && (
+                    <div className="bg-slate-50 rounded-xl p-6">
+                      <p className="text-sm font-semibold text-slate-700 mb-3">Audio</p>
+                      <audio src={previewLesson.audio_url} controls className="w-full" />
+                    </div>
+                  )}
+
+                  {/* Quiz */}
+                  {previewLesson.type === 'quiz' && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center">
+                      <p className="text-4xl mb-3">📝</p>
+                      <p className="font-semibold text-slate-900">Quiz Lesson</p>
+                      <p className="text-sm text-slate-600 mt-1">
+                        {previewLesson.quiz_id ? `Quiz ID: ${previewLesson.quiz_id}` : 'No quiz linked yet'}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Text Content */}
+                  {previewLesson.content && (
+                    <div
+                      className="lesson-content-preview"
+                      dangerouslySetInnerHTML={{ __html: previewLesson.content }}
+                    />
+                  )}
+
+                  {/* Empty state */}
+                  {!previewLesson.content && previewLesson.type === 'text' && (
+                    <p className="text-slate-400 italic text-center py-8">Tidak ada konten teks untuk lesson ini.</p>
+                  )}
+
+                  {/* Duration badge */}
+                  {previewLesson.duration_minutes > 0 && (
+                    <div className="flex items-center gap-2 pt-4 border-t border-gray-100">
+                      <span className="text-xs text-slate-500">Durasi:</span>
+                      <span className="text-xs font-semibold text-slate-700 bg-gray-100 px-2 py-1 rounded-full">
+                        {previewLesson.duration_minutes >= 60
+                          ? `${Math.floor(previewLesson.duration_minutes / 60)}j ${previewLesson.duration_minutes % 60}m`
+                          : `${previewLesson.duration_minutes} menit`}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       {/* Header */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 flex items-center justify-between">
@@ -990,6 +1090,13 @@ export default function LessonManager() {
                     title="Move down"
                   >
                     {reorderingLessonId === lesson.id ? <span className="text-xs">...</span> : <ChevronDown size={18} />}
+                  </button>
+                  <button
+                    onClick={() => setPreviewLesson(lesson)}
+                    className="p-2 hover:bg-emerald-50 rounded-lg transition-colors text-slate-600"
+                    title="Preview"
+                  >
+                    <Eye size={18} />
                   </button>
                   <button
                     onClick={() => handleEditLesson(lesson)}
