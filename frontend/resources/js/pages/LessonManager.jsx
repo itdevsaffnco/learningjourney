@@ -13,6 +13,15 @@ import { TextAlign } from '@tiptap/extension-text-align'
 import { Table, TableRow, TableHeader, TableCell } from '@tiptap/extension-table'
 import './LessonManager.css'
 
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024 // 10 MB
+const checkImageSize = (file) => {
+  if (file.size > MAX_IMAGE_SIZE) {
+    alert(`Ukuran file terlalu besar (${(file.size / 1024 / 1024).toFixed(1)} MB).\nMaksimal ukuran gambar adalah 10 MB.`)
+    return false
+  }
+  return true
+}
+
 function EditorContainer({ editor, children }) {
   const [dragOver, setDragOver] = useState(false)
 
@@ -21,6 +30,7 @@ function EditorContainer({ editor, children }) {
     if (files.length === 0) return
     e.preventDefault()
     for (const file of files) {
+      if (!checkImageSize(file)) continue
       try {
         const token = localStorage.getItem('token')
         const fd = new FormData()
@@ -56,6 +66,7 @@ function Toolbar({ editor, showImage = true }) {
     const file = e.target.files?.[0]
     if (!file) return
     if (fileInputRef.current) fileInputRef.current.value = ''
+    if (!checkImageSize(file)) return
     setUploading(true)
     try {
       const token = localStorage.getItem('token')
@@ -878,6 +889,7 @@ export default function LessonManager() {
                             input.onchange = async (e) => {
                               const file = e.target.files?.[0]
                               if (!file) return
+                              if (!checkImageSize(file)) return
                               setImageUploading(true)
                               try {
                                 const token = localStorage.getItem('token')
