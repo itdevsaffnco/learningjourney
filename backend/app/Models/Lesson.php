@@ -14,6 +14,7 @@ class Lesson extends Model
         "content",
         "video_url",
         "audio_url",
+        "image_url",
         "quiz_id",
         "randomize_questions",
         "num_questions_to_show",

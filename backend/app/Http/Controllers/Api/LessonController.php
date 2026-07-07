@@ -33,11 +33,12 @@ class LessonController extends Controller
         $validated = $request->validate([
             "title" => "required|string|max:255",
             "description" => "nullable|string",
-            "type" => "required|in:text,video,audio,quiz",
+            "type" => "required|in:text,video,audio,quiz,image",
             "content" => "nullable|string",
             "video" => "nullable|file|mimes:mp4,mov,avi,webm|max:102400",
             "video_url" => "nullable|string",
             "audio_url" => "nullable|string",
+            "image_url" => "nullable|string",
             "quiz_id" => "nullable|exists:quizzes,id",
             "randomize_questions" => "nullable|boolean",
             "num_questions_to_show" => "nullable|integer|min:1",
@@ -66,6 +67,9 @@ class LessonController extends Controller
                 $lesson->content = $this->stripBase64Images($validated["content"] ?? null);
             } elseif ($validated["type"] === "audio") {
                 $lesson->audio_url = $validated["audio_url"] ?? null;
+                $lesson->content = $this->stripBase64Images($validated["content"] ?? null);
+            } elseif ($validated["type"] === "image") {
+                $lesson->image_url = $validated["image_url"] ?? null;
                 $lesson->content = $this->stripBase64Images($validated["content"] ?? null);
             } elseif ($validated["type"] === "quiz") {
                 $lesson->quiz_id = $validated["quiz_id"] ?? null;
@@ -103,11 +107,12 @@ class LessonController extends Controller
         $validated = $request->validate([
             "title" => "sometimes|string|max:255",
             "description" => "nullable|string",
-            "type" => "sometimes|in:text,video,audio,quiz",
+            "type" => "sometimes|in:text,video,audio,quiz,image",
             "content" => "nullable|string",
             "video" => "nullable|file|mimes:mp4,mov,avi,webm|max:102400",
             "video_url" => "nullable|string",
             "audio_url" => "nullable|string",
+            "image_url" => "nullable|string",
             "quiz_id" => "nullable|exists:quizzes,id",
             "randomize_questions" => "nullable|boolean",
             "num_questions_to_show" => "nullable|integer|min:1",
@@ -131,6 +136,11 @@ class LessonController extends Controller
                     $validated["quiz_id"] = null;
                 } elseif ($validated["type"] === "audio") {
                     $validated["video_url"] = null;
+                    $validated["image_url"] = null;
+                    $validated["quiz_id"] = null;
+                } elseif ($validated["type"] === "image") {
+                    $validated["video_url"] = null;
+                    $validated["audio_url"] = null;
                     $validated["quiz_id"] = null;
                 } elseif ($validated["type"] === "quiz") {
                     $validated["content"] = null;

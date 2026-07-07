@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, CheckCircle2, Play, FileText, BookOpen, ChevronDown, ChevronRight, Trophy, X, Headphones } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, Play, FileText, BookOpen, ChevronDown, ChevronRight, Trophy, X, Headphones, Image as ImageIcon } from 'lucide-react'
 import { motion } from 'framer-motion'
 import axios from 'axios'
 import { useQuizLock } from '../context/QuizLockContext'
@@ -51,6 +51,7 @@ export default function CourseLearn() {
               content: res.data.lesson?.content,
               video_url: res.data.lesson?.video_url,
               audio_url: res.data.lesson?.audio_url,
+              image_url: res.data.lesson?.image_url,
               quiz_id: res.data.lesson?.quiz_id,
             }
           } catch {
@@ -169,6 +170,7 @@ export default function CourseLearn() {
     if (type === 'video') return <Play size={14} className="text-blue-500" />
     if (type === 'audio') return <Headphones size={14} className="text-teal-500" />
     if (type === 'quiz') return <BookOpen size={14} className="text-purple-500" />
+    if (type === 'image') return <ImageIcon size={14} className="text-amber-500" />
     return <FileText size={14} className="text-slate-500" />
   }
 
@@ -342,6 +344,23 @@ export default function CourseLearn() {
               </motion.div>
             )}
 
+            {/* Image lesson */}
+            {currentLesson.type === 'image' && currentLesson.image_url && (
+              <motion.div key={currentLesson.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                <img
+                  src={currentLesson.image_url}
+                  alt={currentLesson.title}
+                  className="w-full rounded-xl shadow-md object-contain max-h-[600px] bg-gray-50"
+                />
+                {currentLesson.content && currentLesson.content !== '<p></p>' && (
+                  <div
+                    className="mt-6 prose prose-slate max-w-none"
+                    dangerouslySetInnerHTML={{ __html: currentLesson.content }}
+                  />
+                )}
+              </motion.div>
+            )}
+
             {/* Quiz lesson */}
             {currentLesson.type === 'quiz' && (
               <motion.div key={currentLesson.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
@@ -501,7 +520,7 @@ export default function CourseLearn() {
             )}
 
             {/* Fallback if no content */}
-            {currentLesson.type !== 'quiz' && currentLesson.type !== 'audio' && !currentLesson.content && !currentLesson.video_url && (
+            {currentLesson.type !== 'quiz' && currentLesson.type !== 'audio' && !currentLesson.content && !currentLesson.video_url && !currentLesson.image_url && (
               <div className="text-center py-12 text-slate-500">
                 <FileText size={48} className="mx-auto mb-4 opacity-40" />
                 <p>No content available for this lesson yet.</p>

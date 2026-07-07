@@ -154,6 +154,8 @@ export default function LessonManager() {
   const [videoFileName, setVideoFileName] = useState('')
   const [videoFile, setVideoFile] = useState(null)
   const [audioFileName, setAudioFileName] = useState('')
+  const [imageFileName, setImageFileName] = useState('')
+  const [imageUploading, setImageUploading] = useState(false)
   const [quizzes, setQuizzes] = useState([])
   const [reorderingLessonId, setReorderingLessonId] = useState(null)
   const [previewLesson, setPreviewLesson] = useState(null)
@@ -166,6 +168,7 @@ export default function LessonManager() {
     duration: { value: '', unit: 'minutes' },
     video_url: '',
     audio_url: '',
+    image_url: '',
     quiz_id: '',
     randomize_questions: false,
     num_questions_to_show: '',
@@ -354,6 +357,10 @@ export default function LessonManager() {
     if (lesson.type === 'audio' && lesson.audio_url) {
       setAudioFileName('(Audio uploaded)')
     }
+    if (lesson.type === 'image' && lesson.image_url) {
+      setImageFileName('(Image uploaded)')
+      setFormData(prev => ({ ...prev, image_url: lesson.image_url }))
+    }
     setShowForm(true)
   }
 
@@ -437,6 +444,7 @@ export default function LessonManager() {
     setVideoFileName('')
     setVideoFile(null)
     setAudioFileName('')
+    setImageFileName('')
     editor?.commands.clearContent()
     setEditingLessonId(null)
     if (videoInputRef.current) videoInputRef.current.value = ''
@@ -459,6 +467,10 @@ export default function LessonManager() {
     }
     if (formData.type === 'audio' && !formData.audio_url.trim()) {
       alert('Please upload an audio file')
+      return
+    }
+    if (formData.type === 'image' && !formData.image_url) {
+      alert('Please upload an image')
       return
     }
     if (formData.type === 'quiz' && !formData.quiz_id) {
@@ -508,6 +520,7 @@ export default function LessonManager() {
           ...(formData.type === 'text' && { content: editor?.getHTML() }),
           ...(formData.type === 'video' && { video_url: formData.video_url, content: editor?.getHTML() }),
           ...(formData.type === 'audio' && { audio_url: formData.audio_url, content: editor?.getHTML() }),
+          ...(formData.type === 'image' && { image_url: formData.image_url, content: editor?.getHTML() }),
           ...(formData.type === 'quiz' && {
             quiz_id: formData.quiz_id,
             randomize_questions: formData.randomize_questions,
@@ -600,7 +613,7 @@ export default function LessonManager() {
                       Lesson Type
                     </label>
                     <div className="grid grid-cols-4 gap-3">
-                      {['text', 'video', 'audio', 'quiz'].map((type) => (
+                      {['text', 'video', 'audio', 'image', 'quiz'].map((type) => (
                         <label
                           key={type}
                           className="flex items-center gap-3 cursor-pointer p-4 border rounded-lg transition-all"
@@ -767,6 +780,62 @@ export default function LessonManager() {
                     </>
                   )}
 
+                  {formData.type === 'image' && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-900 mb-2">
+                          Image
+                        </label>
+                        <p className="text-xs text-slate-500 mb-2">JPG, PNG, WebP — maks. 5MB</p>
+                        <button
+                          type="button"
+                          disabled={imageUploading}
+                          onClick={async () => {
+                            const input = document.createElement('input')
+                            input.type = 'file'
+                            input.accept = 'image/*'
+                            input.onchange = async (e) => {
+                              const file = e.target.files?.[0]
+                              if (!file) return
+                              setImageUploading(true)
+                              try {
+                                const token = localStorage.getItem('token')
+                                const fd = new FormData()
+                                fd.append('image', file)
+                                const res = await axios.post('/api/trainer/upload-image', fd, {
+                                  headers: { Authorization: `Bearer ${token}` },
+                                })
+                                setFormData(prev => ({ ...prev, image_url: res.data.url }))
+                                setImageFileName(file.name)
+                              } catch {
+                                alert('Gagal upload gambar. Coba lagi.')
+                              } finally {
+                                setImageUploading(false)
+                              }
+                            }
+                            input.click()
+                          }}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left text-slate-900 font-medium disabled:opacity-50"
+                        >
+                          {imageUploading ? 'Uploading...' : imageFileName ? `✓ ${imageFileName}` : formData.image_url ? '✓ Image tersimpan (klik untuk ganti)' : '+ Upload Image'}
+                        </button>
+                        {formData.image_url && !imageUploading && (
+                          <img src={formData.image_url} alt="preview" className="mt-3 max-h-48 rounded-lg border border-gray-200 object-contain" />
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-900 mb-3">
+                          Deskripsi / Caption
+                        </label>
+                        <div className="tiptap-editor-container bg-white">
+                          <Toolbar editor={editor} />
+                          <EditorContent editor={editor} className="tiptap-editor" />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
                   {/* Duration */}
                   <div>
                     <label className="block text-sm font-semibold text-slate-900 mb-3">
@@ -919,6 +988,15 @@ export default function LessonManager() {
                     if (vimeoMatch) return <iframe src={`https://player.vimeo.com/video/${vimeoMatch[1]}`} className="w-full aspect-video rounded-lg shadow-md" allowFullScreen />
                     return <video src={url} controls className="w-full rounded-lg shadow-md" />
                   })()}
+
+                  {/* Image */}
+                  {previewLesson.type === 'image' && previewLesson.image_url && (
+                    <img
+                      src={previewLesson.image_url}
+                      alt={previewLesson.title}
+                      className="w-full rounded-xl shadow-md object-contain max-h-[500px] bg-gray-50"
+                    />
+                  )}
 
                   {/* Audio */}
                   {previewLesson.type === 'audio' && previewLesson.audio_url && (
