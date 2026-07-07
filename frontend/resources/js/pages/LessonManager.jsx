@@ -173,7 +173,7 @@ export default function LessonManager() {
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({ link: false }),
       Link.configure({
         openOnClick: false,
       }),
@@ -219,7 +219,7 @@ export default function LessonManager() {
           }
         },
         addNodeView() {
-          return ({ node, editor, getPos }) => {
+          return ({ node, editor, getPos, updateAttributes }) => {
             const container = document.createElement('div')
             container.className = 'image-container'
             const align = node.attrs.align || 'left'
