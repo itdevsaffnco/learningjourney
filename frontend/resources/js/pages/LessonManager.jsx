@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Plus, X, Edit2, Trash2, ArrowLeft, Bold, Italic, List, ListOrdered, Quote, Link2, AlignLeft, AlignCenter, AlignRight, ChevronUp, ChevronDown, Eye } from 'lucide-react'
+import { Plus, X, Edit2, Trash2, ArrowLeft, Bold, Italic, List, ListOrdered, Quote, Link2, Image as ImageIcon, AlignLeft, AlignCenter, AlignRight, ChevronUp, ChevronDown, Eye } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import axios from 'axios'
 import { useEditor, EditorContent } from '@tiptap/react'
@@ -11,9 +11,39 @@ import './LessonManager.css'
 
 function Toolbar({ editor }) {
   if (!editor) return null
+  const fileInputRef = useRef(null)
+  const [uploading, setUploading] = useState(false)
+
+  const handleImageSelect = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (fileInputRef.current) fileInputRef.current.value = ''
+
+    setUploading(true)
+    try {
+      const token = localStorage.getItem('token')
+      const fd = new FormData()
+      fd.append('image', file)
+      const res = await axios.post('/api/trainer/upload-image', fd, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      editor.chain().focus().setImage({ src: res.data.url }).run()
+    } catch (err) {
+      alert('Gagal upload gambar. Coba lagi.')
+    } finally {
+      setUploading(false)
+    }
+  }
 
   return (
     <div className="flex flex-wrap gap-1 p-3 border-b border-gray-200 bg-gray-50">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleImageSelect}
+        className="hidden"
+      />
       <button
         onClick={() => editor.chain().focus().toggleBold().run()}
         className={`p-2 rounded ${editor.isActive('bold') ? 'bg-slate-700 text-white' : 'hover:bg-gray-200'}`}
@@ -62,6 +92,16 @@ function Toolbar({ editor }) {
         title="Link"
       >
         <Link2 size={18} />
+      </button>
+      <div className="w-px bg-gray-300"></div>
+      <button
+        type="button"
+        onClick={() => fileInputRef.current?.click()}
+        disabled={uploading}
+        className="p-2 rounded hover:bg-gray-200 disabled:opacity-50"
+        title="Insert Image"
+      >
+        {uploading ? <span className="text-xs px-1">...</span> : <ImageIcon size={18} />}
       </button>
       <div className="w-px bg-gray-300"></div>
       <button

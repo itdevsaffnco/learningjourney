@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\AssignmentController;
 use App\Http\Controllers\Api\LeaderboardController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\MysteryShopperController;
+use App\Http\Controllers\Api\ImageController;
 
 Route::middleware('api')->group(function () {
     // Public Auth Routes (No authentication required)
@@ -96,6 +97,9 @@ Route::middleware('api')->group(function () {
 
         // === TRAINER ROUTES ===
         Route::middleware('trainer')->group(function () {
+            // Image upload for lesson content
+            Route::post('/trainer/upload-image', [ImageController::class, 'upload']);
+
             // Dashboard
             Route::get('/trainer/dashboard', [UserController::class, 'trainerDashboard']);
 
