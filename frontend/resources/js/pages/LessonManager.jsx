@@ -1,24 +1,62 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Plus, X, Edit2, Trash2, ArrowLeft, Bold, Italic, List, ListOrdered, Quote, Link2, Image as ImageIcon, AlignLeft, AlignCenter, AlignRight, ChevronUp, ChevronDown, Eye } from 'lucide-react'
+import { Plus, X, Edit2, Trash2, ArrowLeft, Bold, Italic, List, ListOrdered, Quote, Link2, Image as ImageIcon, AlignLeft, AlignCenter, AlignRight, ChevronUp, ChevronDown, Eye, Undo2, Redo2, Underline as UnderlineIcon, Strikethrough as StrikethroughIcon, Highlighter, Palette, Minus, Table as TableIcon } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import axios from 'axios'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
+import { Underline } from '@tiptap/extension-underline'
+import { Highlight } from '@tiptap/extension-highlight'
+import { TextStyle, Color } from '@tiptap/extension-text-style'
+import { TextAlign } from '@tiptap/extension-text-align'
+import { Table, TableRow, TableHeader, TableCell } from '@tiptap/extension-table'
 import './LessonManager.css'
+
+function EditorContainer({ editor, children }) {
+  const [dragOver, setDragOver] = useState(false)
+
+  const handleDrop = async (e) => {
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'))
+    if (files.length === 0) return
+    e.preventDefault()
+    for (const file of files) {
+      try {
+        const token = localStorage.getItem('token')
+        const fd = new FormData()
+        fd.append('image', file)
+        const res = await axios.post('/api/trainer/upload-image', fd, { headers: { Authorization: `Bearer ${token}` } })
+        editor?.chain().focus().setImage({ src: res.data.url }).run()
+      } catch {
+        alert('Gagal upload gambar. Coba lagi.')
+      }
+    }
+    setDragOver(false)
+  }
+
+  return (
+    <div
+      className={`tiptap-editor-container bg-white transition-all ${dragOver ? 'ring-2 ring-blue-400' : ''}`}
+      onDrop={handleDrop}
+      onDragOver={(e) => { if (e.dataTransfer.types.includes('Files')) { e.preventDefault(); setDragOver(true) } }}
+      onDragLeave={() => setDragOver(false)}
+    >
+      {children}
+    </div>
+  )
+}
 
 function Toolbar({ editor }) {
   if (!editor) return null
   const fileInputRef = useRef(null)
+  const colorInputRef = useRef(null)
   const [uploading, setUploading] = useState(false)
 
   const handleImageSelect = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
     if (fileInputRef.current) fileInputRef.current.value = ''
-
     setUploading(true)
     try {
       const token = localStorage.getItem('token')
@@ -28,115 +66,106 @@ function Toolbar({ editor }) {
         headers: { Authorization: `Bearer ${token}` },
       })
       editor.chain().focus().setImage({ src: res.data.url }).run()
-    } catch (err) {
+    } catch {
       alert('Gagal upload gambar. Coba lagi.')
     } finally {
       setUploading(false)
     }
   }
 
+  const setAlignment = (align) => {
+    if (editor.isActive('image')) {
+      editor.chain().focus().setImageAlignment(align).run()
+    } else {
+      editor.chain().focus().setTextAlign(align).run()
+    }
+  }
+
+  const isAlignActive = (align) =>
+    editor.isActive('image', { align }) || editor.isActive({ textAlign: align })
+
+  const btn = (active) =>
+    `p-1.5 rounded ${active ? 'bg-slate-700 text-white' : 'hover:bg-gray-200'}`
+
+  const sep = <div className="w-px bg-gray-300 self-stretch mx-0.5" />
+
   return (
-    <div className="flex flex-wrap gap-1 p-3 border-b border-gray-200 bg-gray-50">
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleImageSelect}
-        className="hidden"
-      />
+    <div className="flex flex-wrap items-center gap-1 p-2 border-b border-gray-200 bg-gray-50">
+      <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
+      <input ref={colorInputRef} type="color" className="sr-only" onChange={(e) => editor.chain().focus().setColor(e.target.value).run()} />
+
+      {/* Undo / Redo */}
+      <button type="button" onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} className="p-1.5 rounded hover:bg-gray-200 disabled:opacity-30" title="Undo"><Undo2 size={15} /></button>
+      <button type="button" onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} className="p-1.5 rounded hover:bg-gray-200 disabled:opacity-30" title="Redo"><Redo2 size={15} /></button>
+      {sep}
+
+      {/* Headings */}
+      {[1, 2, 3].map(lvl => (
+        <button
+          key={lvl}
+          type="button"
+          onClick={() => editor.chain().focus().toggleHeading({ level: lvl }).run()}
+          className={`px-2 py-1 rounded text-xs font-bold leading-none ${editor.isActive('heading', { level: lvl }) ? 'bg-slate-700 text-white' : 'hover:bg-gray-200 text-slate-700'}`}
+          title={`Heading ${lvl}`}
+        >H{lvl}</button>
+      ))}
+      {sep}
+
+      {/* Text formatting */}
+      <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} className={btn(editor.isActive('bold'))} title="Bold"><Bold size={15} /></button>
+      <button type="button" onClick={() => editor.chain().focus().toggleItalic().run()} className={btn(editor.isActive('italic'))} title="Italic"><Italic size={15} /></button>
+      <button type="button" onClick={() => editor.chain().focus().toggleUnderline().run()} className={btn(editor.isActive('underline'))} title="Underline"><UnderlineIcon size={15} /></button>
+      <button type="button" onClick={() => editor.chain().focus().toggleStrike().run()} className={btn(editor.isActive('strike'))} title="Strikethrough"><StrikethroughIcon size={15} /></button>
+      {sep}
+
+      {/* Highlight + Color */}
+      <button type="button" onClick={() => editor.chain().focus().toggleHighlight({ color: '#fef08a' }).run()} className={btn(editor.isActive('highlight'))} title="Highlight"><Highlighter size={15} /></button>
+      <button type="button" onClick={() => colorInputRef.current?.click()} className="p-1.5 rounded hover:bg-gray-200" title="Text Color"><Palette size={15} /></button>
+      {sep}
+
+      {/* Lists + Blockquote */}
+      <button type="button" onClick={() => editor.chain().focus().toggleBulletList().run()} className={btn(editor.isActive('bulletList'))} title="Bullet List"><List size={15} /></button>
+      <button type="button" onClick={() => editor.chain().focus().toggleOrderedList().run()} className={btn(editor.isActive('orderedList'))} title="Ordered List"><ListOrdered size={15} /></button>
+      <button type="button" onClick={() => editor.chain().focus().toggleBlockquote().run()} className={btn(editor.isActive('blockquote'))} title="Blockquote"><Quote size={15} /></button>
+      {sep}
+
+      {/* Alignment */}
+      <button type="button" onClick={() => setAlignment('left')} className={btn(isAlignActive('left'))} title="Align Left"><AlignLeft size={15} /></button>
+      <button type="button" onClick={() => setAlignment('center')} className={btn(isAlignActive('center'))} title="Align Center"><AlignCenter size={15} /></button>
+      <button type="button" onClick={() => setAlignment('right')} className={btn(isAlignActive('right'))} title="Align Right"><AlignRight size={15} /></button>
+      {sep}
+
+      {/* Link + Image */}
       <button
-        onClick={() => editor.chain().focus().toggleBold().run()}
-        className={`p-2 rounded ${editor.isActive('bold') ? 'bg-slate-700 text-white' : 'hover:bg-gray-200'}`}
-        title="Bold"
-      >
-        <Bold size={18} />
-      </button>
-      <button
-        onClick={() => editor.chain().focus().toggleItalic().run()}
-        className={`p-2 rounded ${editor.isActive('italic') ? 'bg-slate-700 text-white' : 'hover:bg-gray-200'}`}
-        title="Italic"
-      >
-        <Italic size={18} />
-      </button>
-      <div className="w-px bg-gray-300"></div>
-      <button
-        onClick={() => editor.chain().focus().toggleBulletList().run()}
-        className={`p-2 rounded ${editor.isActive('bulletList') ? 'bg-slate-700 text-white' : 'hover:bg-gray-200'}`}
-        title="Bullet List"
-      >
-        <List size={18} />
-      </button>
-      <button
-        onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        className={`p-2 rounded ${editor.isActive('orderedList') ? 'bg-slate-700 text-white' : 'hover:bg-gray-200'}`}
-        title="Ordered List"
-      >
-        <ListOrdered size={18} />
-      </button>
-      <button
-        onClick={() => editor.chain().focus().toggleBlockquote().run()}
-        className={`p-2 rounded ${editor.isActive('blockquote') ? 'bg-slate-700 text-white' : 'hover:bg-gray-200'}`}
-        title="Quote"
-      >
-        <Quote size={18} />
-      </button>
-      <div className="w-px bg-gray-300"></div>
-      <button
+        type="button"
         onClick={() => {
           const url = prompt('Enter URL:')
-          if (url) {
-            editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
-          }
+          if (url) editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
         }}
-        className={`p-2 rounded ${editor.isActive('link') ? 'bg-slate-700 text-white' : 'hover:bg-gray-200'}`}
+        className={btn(editor.isActive('link'))}
         title="Link"
-      >
-        <Link2 size={18} />
+      ><Link2 size={15} /></button>
+      <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="p-1.5 rounded hover:bg-gray-200 disabled:opacity-50" title="Insert Image">
+        {uploading ? <span className="text-xs px-1">...</span> : <ImageIcon size={15} />}
       </button>
-      <div className="w-px bg-gray-300"></div>
-      <button
-        type="button"
-        onClick={() => fileInputRef.current?.click()}
-        disabled={uploading}
-        className="p-2 rounded hover:bg-gray-200 disabled:opacity-50"
-        title="Insert Image"
-      >
-        {uploading ? <span className="text-xs px-1">...</span> : <ImageIcon size={18} />}
-      </button>
-      <div className="w-px bg-gray-300"></div>
-      <button
-        onClick={() => editor.chain().focus().setImageAlignment('left').run()}
-        className={`p-2 rounded ${editor.isActive('image', { align: 'left' }) ? 'bg-slate-700 text-white' : 'hover:bg-gray-200'}`}
-        title="Align Left"
-        type="button"
-      >
-        <AlignLeft size={18} />
-      </button>
-      <button
-        onClick={() => editor.chain().focus().setImageAlignment('center').run()}
-        className={`p-2 rounded ${editor.isActive('image', { align: 'center' }) ? 'bg-slate-700 text-white' : 'hover:bg-gray-200'}`}
-        title="Align Center"
-        type="button"
-      >
-        <AlignCenter size={18} />
-      </button>
-      <button
-        onClick={() => editor.chain().focus().setImageAlignment('right').run()}
-        className={`p-2 rounded ${editor.isActive('image', { align: 'right' }) ? 'bg-slate-700 text-white' : 'hover:bg-gray-200'}`}
-        title="Align Right"
-        type="button"
-      >
-        <AlignRight size={18} />
-      </button>
-      <div className="w-px bg-gray-300"></div>
-      <button
-        onClick={() => editor.chain().focus().clearNodes().run()}
-        className="p-2 rounded hover:bg-gray-200"
-        title="Clear Formatting"
-        type="button"
-      >
-        ¶
-      </button>
+      {sep}
+
+      {/* Table */}
+      <button type="button" onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} className="p-1.5 rounded hover:bg-gray-200" title="Insert Table"><TableIcon size={15} /></button>
+      {editor.isActive('table') && (
+        <>
+          <button type="button" onClick={() => editor.chain().focus().addRowAfter().run()} className="px-1.5 py-1 rounded hover:bg-gray-200 text-xs font-bold text-slate-600" title="Add Row">+R</button>
+          <button type="button" onClick={() => editor.chain().focus().addColumnAfter().run()} className="px-1.5 py-1 rounded hover:bg-gray-200 text-xs font-bold text-slate-600" title="Add Column">+C</button>
+          <button type="button" onClick={() => editor.chain().focus().deleteRow().run()} className="px-1.5 py-1 rounded hover:bg-red-100 text-xs font-bold text-red-500" title="Delete Row">−R</button>
+          <button type="button" onClick={() => editor.chain().focus().deleteColumn().run()} className="px-1.5 py-1 rounded hover:bg-red-100 text-xs font-bold text-red-500" title="Delete Column">−C</button>
+          <button type="button" onClick={() => editor.chain().focus().deleteTable().run()} className="px-1.5 py-1 rounded hover:bg-red-100 text-xs font-bold text-red-500" title="Delete Table"><Trash2 size={13} /></button>
+        </>
+      )}
+
+      {/* HR + Clear */}
+      <button type="button" onClick={() => editor.chain().focus().setHorizontalRule().run()} className="p-1.5 rounded hover:bg-gray-200" title="Horizontal Rule"><Minus size={15} /></button>
+      {sep}
+      <button type="button" onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()} className="p-1.5 rounded hover:bg-gray-200 text-xs font-medium text-slate-500" title="Clear Formatting">¶</button>
     </div>
   )
 }
@@ -177,9 +206,16 @@ export default function LessonManager() {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ link: false }),
-      Link.configure({
-        openOnClick: false,
-      }),
+      Link.configure({ openOnClick: false }),
+      Underline,
+      Highlight.configure({ multicolor: true }),
+      TextStyle,
+      Color,
+      TextAlign.configure({ types: ['heading', 'paragraph'] }),
+      Table.configure({ resizable: true }),
+      TableRow,
+      TableHeader,
+      TableCell,
       Image.extend({
         addAttributes() {
           return {
@@ -693,10 +729,10 @@ export default function LessonManager() {
                       <label className="block text-sm font-semibold text-slate-900 mb-3">
                         Lesson Content
                       </label>
-                      <div className="tiptap-editor-container bg-white">
+                      <EditorContainer editor={editor}>
                         <Toolbar editor={editor} />
                         <EditorContent editor={editor} className="tiptap-editor" />
-                      </div>
+                      </EditorContainer>
                     </div>
                   )}
 
