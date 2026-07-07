@@ -104,6 +104,15 @@ jobs:
             echo "==> Pulling new backend image..."
             docker pull $BACKEND_IMAGE
 
+            echo "==> Ensuring persistent storage directory exists..."
+            mkdir -p "$HOME/learningjourney/storage/app/public/videos"
+            mkdir -p "$HOME/learningjourney/storage/app/public/images"
+            mkdir -p "$HOME/learningjourney/storage/app/public/lesson-images"
+            mkdir -p "$HOME/learningjourney/storage/logs"
+            mkdir -p "$HOME/learningjourney/storage/framework/cache"
+            mkdir -p "$HOME/learningjourney/storage/framework/sessions"
+            mkdir -p "$HOME/learningjourney/storage/framework/views"
+
             echo "==> Starting backend container..."
             docker run -d \
               --name learningjourney_backend \
@@ -111,6 +120,7 @@ jobs:
               --env-file "$HOME/learningjourney/backend.env" \
               --add-host host.docker.internal:host-gateway \
               -p 2012:80 \
+              -v "$HOME/learningjourney/storage:/var/www/html/storage" \
               --restart unless-stopped \
               $BACKEND_IMAGE
 
