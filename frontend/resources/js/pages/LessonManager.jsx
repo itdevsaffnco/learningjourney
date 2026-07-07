@@ -7,7 +7,6 @@ import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
-import { Underline } from '@tiptap/extension-underline'
 import { Highlight } from '@tiptap/extension-highlight'
 import { TextStyle, Color } from '@tiptap/extension-text-style'
 import { TextAlign } from '@tiptap/extension-text-align'
@@ -209,7 +208,6 @@ export default function LessonManager() {
     extensions: [
       StarterKit.configure({ link: false }),
       Link.configure({ openOnClick: false }),
-      Underline,
       Highlight.configure({ multicolor: true }),
       TextStyle,
       Color,
@@ -651,7 +649,7 @@ export default function LessonManager() {
                       Lesson Type
                     </label>
                     <div className="grid grid-cols-4 gap-3">
-                      {['text', 'video', 'audio', 'image', 'quiz'].map((type) => (
+                      {['text', 'video', 'audio', 'quiz'].map((type) => (
                         <label
                           key={type}
                           className="flex items-center gap-3 cursor-pointer p-4 border rounded-lg transition-all"
@@ -1068,17 +1066,6 @@ export default function LessonManager() {
                     <p className="text-slate-400 italic text-center py-8">Tidak ada konten teks untuk lesson ini.</p>
                   )}
 
-                  {/* Duration badge */}
-                  {previewLesson.duration_minutes > 0 && (
-                    <div className="flex items-center gap-2 pt-4 border-t border-gray-100">
-                      <span className="text-xs text-slate-500">Durasi:</span>
-                      <span className="text-xs font-semibold text-slate-700 bg-gray-100 px-2 py-1 rounded-full">
-                        {previewLesson.duration_minutes >= 60
-                          ? `${Math.floor(previewLesson.duration_minutes / 60)}j ${previewLesson.duration_minutes % 60}m`
-                          : `${previewLesson.duration_minutes} menit`}
-                      </span>
-                    </div>
-                  )}
                 </div>
               </div>
             </motion.div>
