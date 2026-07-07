@@ -259,8 +259,16 @@ export default function LessonManager() {
           }
         },
         addNodeView() {
-          return ({ node: initialNode, editor, getPos, updateAttributes }) => {
+          return ({ node: initialNode, editor, getPos }) => {
             let currentNode = initialNode
+
+            const updateAttrs = (attrs) => {
+              const pos = getPos()
+              if (typeof pos !== 'number') return
+              editor.view.dispatch(
+                editor.view.state.tr.setNodeMarkup(pos, null, { ...currentNode.attrs, ...attrs })
+              )
+            }
 
             const applyAlign = (align) => {
               container.style.textAlign = align || 'left'
@@ -310,7 +318,7 @@ export default function LessonManager() {
               btn.onmousedown = (e) => {
                 e.preventDefault()
                 e.stopPropagation()
-                updateAttributes({ align })
+                updateAttrs({ align })
               }
               alignBtns.appendChild(btn)
             })
@@ -333,7 +341,7 @@ export default function LessonManager() {
               }
               const onMouseUp = () => {
                 isResizing = false
-                updateAttributes({ width: img.offsetWidth })
+                updateAttrs({ width: img.offsetWidth })
                 document.removeEventListener('mousemove', onMouseMove)
                 document.removeEventListener('mouseup', onMouseUp)
               }
