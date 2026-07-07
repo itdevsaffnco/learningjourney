@@ -217,6 +217,7 @@ export default function LessonManager() {
       TableHeader,
       TableCell,
       Image.extend({
+        draggable: true,
         addAttributes() {
           return {
             ...this.parent?.(),
@@ -287,6 +288,21 @@ export default function LessonManager() {
             deleteBtn.onmousedown = handleDelete
             deleteBtn.onclick = handleDelete
 
+            const dragHandle = document.createElement('div')
+            dragHandle.className = 'image-drag-handle'
+            dragHandle.title = 'Drag to reposition'
+            dragHandle.innerHTML = '⠿'
+
+            dragHandle.addEventListener('mousedown', () => {
+              container.draggable = true
+            })
+            container.addEventListener('dragend', () => {
+              container.draggable = false
+            })
+            container.addEventListener('dragstart', (e) => {
+              e.stopPropagation()
+            })
+
             const resizeHandle = document.createElement('div')
             resizeHandle.className = 'image-resize-handle'
             resizeHandle.title = 'Drag to resize'
@@ -318,6 +334,7 @@ export default function LessonManager() {
               document.addEventListener('mouseup', onMouseUp)
             }
 
+            container.appendChild(dragHandle)
             container.appendChild(img)
             container.appendChild(deleteBtn)
             container.appendChild(resizeHandle)

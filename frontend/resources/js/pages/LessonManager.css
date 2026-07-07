@@ -242,6 +242,36 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
+.image-drag-handle {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 24px;
+  height: 24px;
+  background-color: rgba(51, 65, 85, 0.75);
+  color: white;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 10;
+  pointer-events: auto;
+  user-select: none;
+}
+
+.image-container:hover .image-drag-handle {
+  opacity: 1;
+}
+
+.image-drag-handle:active {
+  cursor: grabbing;
+  background-color: rgba(51, 65, 85, 1);
+}
+
 .image-delete-btn {
   position: absolute;
   top: 8px;
