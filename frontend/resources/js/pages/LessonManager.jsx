@@ -1,91 +1,19 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Plus, X, Edit2, Trash2, ArrowLeft, Bold, Italic, List, ListOrdered, Quote, Link2, Image as ImageIcon, AlignLeft, AlignCenter, AlignRight, ChevronUp, ChevronDown, Eye } from 'lucide-react'
+import { Plus, X, Edit2, Trash2, ArrowLeft, Bold, Italic, List, ListOrdered, Quote, Link2, AlignLeft, AlignCenter, AlignRight, ChevronUp, ChevronDown, Eye } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import axios from 'axios'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
-import { Extension } from '@tiptap/core'
-import { Plugin, PluginKey } from '@tiptap/pm/state'
 import './LessonManager.css'
 
-const ImagePaste = Extension.create({
-  name: 'imagePaste',
-  addProseMirrorPlugins() {
-    return [
-      new Plugin({
-        key: new PluginKey('imagePaste'),
-        props: {
-          handlePaste: (view, event) => {
-            const items = (event.clipboardData || event.dataTransfer)?.items
-            if (!items) return false
-
-            let handled = false
-            for (let item of items) {
-              if (item.type.indexOf('image') !== -1) {
-                event.preventDefault()
-                handled = true
-                const file = item.getAsFile()
-                if (!file) continue
-
-                const reader = new FileReader()
-                reader.onload = (e) => {
-                  const src = e.target?.result
-                  view.dispatch(
-                    view.state.tr.insertContent({
-                      type: 'image',
-                      attrs: { src },
-                    })
-                  )
-                }
-                reader.readAsDataURL(file)
-              }
-            }
-            return handled
-          },
-        },
-      }),
-    ]
-  },
-})
-
-function Toolbar({ editor, onImageInsert }) {
+function Toolbar({ editor }) {
   if (!editor) return null
-  const fileInputRef = useRef(null)
-
-  const handleImageSelect = (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      const src = event.target?.result
-      try {
-        editor.chain().focus().setImage({ src }).run()
-      } catch (err) {
-        console.error('Error inserting image:', err)
-      }
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''
-      }
-    }
-    reader.readAsDataURL(file)
-  }
 
   return (
     <div className="flex flex-wrap gap-1 p-3 border-b border-gray-200 bg-gray-50">
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleImageSelect}
-        className="hidden"
-        onKeyDown={(e) => e.stopPropagation()}
-        onClick={(e) => e.stopPropagation()}
-      />
       <button
         onClick={() => editor.chain().focus().toggleBold().run()}
         className={`p-2 rounded ${editor.isActive('bold') ? 'bg-slate-700 text-white' : 'hover:bg-gray-200'}`}
@@ -134,19 +62,6 @@ function Toolbar({ editor, onImageInsert }) {
         title="Link"
       >
         <Link2 size={18} />
-      </button>
-      <div className="w-px bg-gray-300"></div>
-      <button
-        onClick={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          fileInputRef.current?.click()
-        }}
-        className="p-2 rounded hover:bg-gray-200"
-        title="Insert Image"
-        type="button"
-      >
-        <ImageIcon size={18} />
       </button>
       <div className="w-px bg-gray-300"></div>
       <button
@@ -222,7 +137,6 @@ export default function LessonManager() {
       Link.configure({
         openOnClick: false,
       }),
-      ImagePaste,
       Image.extend({
         addAttributes() {
           return {
@@ -333,7 +247,7 @@ export default function LessonManager() {
           }
         },
       }).configure({
-        allowBase64: true,
+        allowBase64: false,
       }),
     ],
     content: '<p></p>',
