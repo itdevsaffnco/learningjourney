@@ -259,32 +259,36 @@ export default function LessonManager() {
           }
         },
         addNodeView() {
-          return ({ node, editor, getPos, updateAttributes }) => {
+          return ({ node: initialNode, editor, getPos, updateAttributes }) => {
+            let currentNode = initialNode
+
+            const applyAlign = (align) => {
+              container.style.textAlign = align || 'left'
+              alignBtns.querySelectorAll('.image-align-btn').forEach((btn, i) => {
+                btn.classList.toggle('active', ['left', 'center', 'right'][i] === (align || 'left'))
+              })
+            }
+
             const container = document.createElement('div')
             container.className = 'image-container'
-            const align = node.attrs.align || 'left'
-            container.style.textAlign = align
 
             const img = document.createElement('img')
-            img.src = node.attrs.src
-            img.style.width = `${node.attrs.width || 300}px`
+            img.src = currentNode.attrs.src
+            img.style.width = `${currentNode.attrs.width || 300}px`
             img.style.height = 'auto'
             img.draggable = false
-            img.style.display = 'inline-block'
 
             const deleteBtn = document.createElement('button')
             deleteBtn.className = 'image-delete-btn'
             deleteBtn.innerHTML = '✕'
             deleteBtn.title = 'Delete image'
             deleteBtn.type = 'button'
-
             const handleDelete = (e) => {
               e.preventDefault()
               e.stopPropagation()
               const pos = getPos()
-              editor.chain().deleteRange({ from: pos, to: pos + node.nodeSize }).run()
+              editor.chain().deleteRange({ from: pos, to: pos + currentNode.nodeSize }).run()
             }
-
             deleteBtn.onmousedown = handleDelete
             deleteBtn.onclick = handleDelete
 
@@ -292,54 +296,70 @@ export default function LessonManager() {
             dragHandle.className = 'image-drag-handle'
             dragHandle.title = 'Drag to reposition'
             dragHandle.innerHTML = '⠿'
+            dragHandle.addEventListener('mousedown', () => { container.draggable = true })
+            container.addEventListener('dragend', () => { container.draggable = false })
 
-            dragHandle.addEventListener('mousedown', () => {
-              container.draggable = true
-            })
-            container.addEventListener('dragend', () => {
-              container.draggable = false
-            })
-            container.addEventListener('dragstart', (e) => {
-              e.stopPropagation()
+            const alignBtns = document.createElement('div')
+            alignBtns.className = 'image-align-btns'
+            ;['left', 'center', 'right'].forEach((align, i) => {
+              const btn = document.createElement('button')
+              btn.className = 'image-align-btn'
+              btn.type = 'button'
+              btn.title = `Align ${align}`
+              btn.innerHTML = ['⟵', '↔', '⟶'][i]
+              btn.onmousedown = (e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                updateAttributes({ align })
+              }
+              alignBtns.appendChild(btn)
             })
 
             const resizeHandle = document.createElement('div')
             resizeHandle.className = 'image-resize-handle'
             resizeHandle.title = 'Drag to resize'
-
             let isResizing = false
-
             resizeHandle.onmousedown = (e) => {
               e.preventDefault()
               e.stopPropagation()
               isResizing = true
               const startX = e.clientX
               const startWidth = img.offsetWidth
-
               const onMouseMove = (moveEvent) => {
                 if (!isResizing) return
                 const diff = moveEvent.clientX - startX
                 const newWidth = Math.max(100, startWidth + diff)
                 img.style.width = `${newWidth}px`
               }
-
               const onMouseUp = () => {
                 isResizing = false
                 updateAttributes({ width: img.offsetWidth })
                 document.removeEventListener('mousemove', onMouseMove)
                 document.removeEventListener('mouseup', onMouseUp)
               }
-
               document.addEventListener('mousemove', onMouseMove)
               document.addEventListener('mouseup', onMouseUp)
             }
 
             container.appendChild(dragHandle)
             container.appendChild(img)
+            container.appendChild(alignBtns)
             container.appendChild(deleteBtn)
             container.appendChild(resizeHandle)
 
-            return { dom: container }
+            applyAlign(currentNode.attrs.align)
+
+            return {
+              dom: container,
+              update: (updatedNode) => {
+                if (updatedNode.type.name !== 'image') return false
+                currentNode = updatedNode
+                img.src = updatedNode.attrs.src
+                img.style.width = `${updatedNode.attrs.width || 300}px`
+                applyAlign(updatedNode.attrs.align)
+                return true
+              },
+            }
           }
         },
       }).configure({
