@@ -47,7 +47,7 @@ function EditorContainer({ editor, children }) {
   )
 }
 
-function Toolbar({ editor }) {
+function Toolbar({ editor, showImage = true }) {
   if (!editor) return null
   const fileInputRef = useRef(null)
   const colorInputRef = useRef(null)
@@ -145,9 +145,11 @@ function Toolbar({ editor }) {
         className={btn(editor.isActive('link'))}
         title="Link"
       ><Link2 size={15} /></button>
-      <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="p-1.5 rounded hover:bg-gray-200 disabled:opacity-50" title="Insert Image">
-        {uploading ? <span className="text-xs px-1">...</span> : <ImageIcon size={15} />}
-      </button>
+      {showImage && (
+        <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="p-1.5 rounded hover:bg-gray-200 disabled:opacity-50" title="Insert Image">
+          {uploading ? <span className="text-xs px-1">...</span> : <ImageIcon size={15} />}
+        </button>
+      )}
       {sep}
 
       {/* Table */}
@@ -864,10 +866,10 @@ export default function LessonManager() {
                         <label className="block text-sm font-semibold text-slate-900 mb-3">
                           Deskripsi / Caption
                         </label>
-                        <div className="tiptap-editor-container bg-white">
-                          <Toolbar editor={editor} />
+                        <EditorContainer editor={editor}>
+                          <Toolbar editor={editor} showImage={false} />
                           <EditorContent editor={editor} className="tiptap-editor" />
-                        </div>
+                        </EditorContainer>
                       </div>
                     </>
                   )}
