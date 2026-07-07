@@ -610,7 +610,7 @@ export default function LessonManager() {
               exit={{ opacity: 0, scale: 0.95 }}
               className="fixed inset-0 flex items-center justify-center z-50 p-4"
             >
-              <div className="bg-white rounded-lg shadow-lg border border-gray-200 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="bg-white rounded-lg shadow-lg border border-gray-200 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
                 {/* Modal Header */}
                 <div className="flex items-center justify-between px-8 py-6 border-b border-gray-200">
                   <h2 className="text-2xl font-bold text-slate-900">
@@ -993,7 +993,7 @@ export default function LessonManager() {
               exit={{ opacity: 0, scale: 0.95 }}
               className="fixed inset-0 flex items-center justify-center z-50 p-4"
             >
-              <div className="bg-white rounded-xl shadow-xl border border-gray-200 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="bg-white rounded-xl shadow-xl border border-gray-200 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
                 {/* Preview Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-slate-50 rounded-t-xl sticky top-0">
                   <div className="flex items-center gap-3">
