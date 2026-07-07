@@ -20,6 +20,12 @@ class LessonController extends Controller
         ]);
     }
 
+    private function stripBase64Images(?string $content): ?string
+    {
+        if (!$content) return $content;
+        return preg_replace('/<img[^>]+src\s*=\s*"data:[^"]+;base64,[^"]*"[^>]*\/?>/i', '', $content);
+    }
+
     public function store(Request $request, $moduleId)
     {
         $module = Module::findOrFail($moduleId);
@@ -49,7 +55,7 @@ class LessonController extends Controller
             $lesson->order = $validated["order"] ?? 0;
 
             if ($validated["type"] === "text") {
-                $lesson->content = $validated["content"] ?? null;
+                $lesson->content = $this->stripBase64Images($validated["content"] ?? null);
             } elseif ($validated["type"] === "video") {
                 if ($request->hasFile('video')) {
                     $path = $request->file('video')->store('videos', 'public');
@@ -57,10 +63,10 @@ class LessonController extends Controller
                 } else {
                     $lesson->video_url = $validated["video_url"] ?? null;
                 }
-                $lesson->content = $validated["content"] ?? null;
+                $lesson->content = $this->stripBase64Images($validated["content"] ?? null);
             } elseif ($validated["type"] === "audio") {
                 $lesson->audio_url = $validated["audio_url"] ?? null;
-                $lesson->content = $validated["content"] ?? null;
+                $lesson->content = $this->stripBase64Images($validated["content"] ?? null);
             } elseif ($validated["type"] === "quiz") {
                 $lesson->quiz_id = $validated["quiz_id"] ?? null;
                 $lesson->randomize_questions = $validated["randomize_questions"] ?? false;
@@ -131,6 +137,10 @@ class LessonController extends Controller
                     $validated["video_url"] = null;
                     $validated["audio_url"] = null;
                 }
+            }
+
+            if (isset($validated["content"])) {
+                $validated["content"] = $this->stripBase64Images($validated["content"]);
             }
 
             unset($validated["video"]);
