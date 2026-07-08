@@ -213,6 +213,7 @@ export default function LessonManager() {
   const [videoFileName, setVideoFileName] = useState('')
   const [videoFile, setVideoFile] = useState(null)
   const [audioFileName, setAudioFileName] = useState('')
+  const [audioFile, setAudioFile] = useState(null)
   const [imageFileName, setImageFileName] = useState('')
   const [imageUploading, setImageUploading] = useState(false)
   const [quizzes, setQuizzes] = useState([])
@@ -476,6 +477,7 @@ export default function LessonManager() {
     }
     if (lesson.type === 'audio' && lesson.audio_url) {
       setAudioFileName('(Audio uploaded)')
+      setFormData(prev => ({ ...prev, audio_url: lesson.audio_url }))
     }
     if (lesson.type === 'image' && lesson.image_url) {
       setImageFileName('(Image uploaded)')
@@ -541,12 +543,13 @@ export default function LessonManager() {
       alert('Please select an audio file (MP3, WAV, etc.)')
       return
     }
-    setAudioFileName(file.name)
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      setFormData(prev => ({ ...prev, audio_url: event.target?.result }))
+    if (file.size > 50 * 1024 * 1024) {
+      alert(`File audio terlalu besar (${(file.size / 1024 / 1024).toFixed(1)} MB). Maksimal 50 MB.`)
+      return
     }
-    reader.readAsDataURL(file)
+    setAudioFile(file)
+    setAudioFileName(file.name)
+    setFormData(prev => ({ ...prev, audio_url: URL.createObjectURL(file) }))
   }
 
   const resetForm = () => {
@@ -564,6 +567,7 @@ export default function LessonManager() {
     setVideoFileName('')
     setVideoFile(null)
     setAudioFileName('')
+    setAudioFile(null)
     setImageFileName('')
     editor?.commands.clearContent()
     setEditingLessonId(null)
@@ -585,7 +589,7 @@ export default function LessonManager() {
       alert('Please upload a video file')
       return
     }
-    if (formData.type === 'audio' && !formData.audio_url.trim()) {
+    if (formData.type === 'audio' && !audioFile && !formData.audio_url?.trim()) {
       alert('Please upload an audio file')
       return
     }
@@ -613,8 +617,25 @@ export default function LessonManager() {
         }
       }
 
-      // Use FormData when uploading a video file, JSON otherwise
-      if (formData.type === 'video' && videoFile) {
+      // Use FormData when uploading a video or audio file, JSON otherwise
+      if (formData.type === 'audio' && audioFile) {
+        const fd = new FormData()
+        fd.append('title', formData.title)
+        fd.append('description', formData.description || '')
+        fd.append('type', 'audio')
+        fd.append('duration_minutes', durationMinutes)
+        fd.append('content', editor?.getHTML() || '')
+        fd.append('audio', audioFile)
+        if (editingLessonId) fd.append('_method', 'PUT')
+
+        await axios.post(
+          editingLessonId
+            ? `/api/modules/${moduleId}/lessons/${editingLessonId}`
+            : `/api/modules/${moduleId}/lessons`,
+          fd,
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+      } else if (formData.type === 'video' && videoFile) {
         const fd = new FormData()
         fd.append('title', formData.title)
         fd.append('description', formData.description || '')

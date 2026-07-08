@@ -36,6 +36,18 @@ Route::get('/trainer/image', function (\Illuminate\Http\Request $request) {
     ]);
 });
 
+// Audio serving with range request support for streaming
+Route::get('/trainer/audio', function (\Illuminate\Http\Request $request) {
+    $filename = basename($request->query('f', ''));
+    if (!$filename) abort(400);
+    $path = storage_path('app/public/lesson-audio/' . $filename);
+    if (!is_file($path)) abort(404);
+    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+    $mimes = ['mp3' => 'audio/mpeg', 'wav' => 'audio/wav', 'm4a' => 'audio/mp4', 'ogg' => 'audio/ogg', 'aac' => 'audio/aac', 'flac' => 'audio/flac'];
+    $mime = $mimes[$ext] ?? 'audio/mpeg';
+    return response()->file($path, ['Content-Type' => $mime, 'Accept-Ranges' => 'bytes']);
+});
+
 Route::get('/health/storage', function () {
     $base = storage_path('app/public');
     $lessonImages = $base . '/lesson-images';

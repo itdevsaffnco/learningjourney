@@ -31,6 +31,7 @@ class LessonController extends Controller
             "content" => "nullable|string",
             "video" => "nullable|file|mimes:mp4,mov,avi,webm|max:102400",
             "video_url" => "nullable|string",
+            "audio" => "nullable|file|mimes:mp3,wav,m4a,ogg,aac,flac|max:51200",
             "audio_url" => "nullable|string",
             "image_url" => "nullable|string",
             "quiz_id" => "nullable|exists:quizzes,id",
@@ -60,7 +61,12 @@ class LessonController extends Controller
                 }
                 $lesson->content = $validated["content"] ?? null;
             } elseif ($validated["type"] === "audio") {
-                $lesson->audio_url = $validated["audio_url"] ?? null;
+                if ($request->hasFile('audio')) {
+                    $path = $request->file('audio')->store('lesson-audio', 'public');
+                    $lesson->audio_url = '/api/trainer/audio?f=' . basename($path);
+                } else {
+                    $lesson->audio_url = $validated["audio_url"] ?? null;
+                }
                 $lesson->content = $validated["content"] ?? null;
             } elseif ($validated["type"] === "image") {
                 $lesson->image_url = $validated["image_url"] ?? null;
@@ -75,7 +81,7 @@ class LessonController extends Controller
 
             return response()->json([
                 "message" => "Lesson created successfully",
-                "lesson" => $lesson,
+                "lesson" => ["id" => $lesson->id, "title" => $lesson->title, "type" => $lesson->type],
             ], 201);
         } catch (\Exception $e) {
             \Log::error("Lesson creation error: " . $e->getMessage());
@@ -105,6 +111,7 @@ class LessonController extends Controller
             "content" => "nullable|string",
             "video" => "nullable|file|mimes:mp4,mov,avi,webm|max:102400",
             "video_url" => "nullable|string",
+            "audio" => "nullable|file|mimes:mp3,wav,m4a,ogg,aac,flac|max:51200",
             "audio_url" => "nullable|string",
             "image_url" => "nullable|string",
             "quiz_id" => "nullable|exists:quizzes,id",
@@ -118,6 +125,11 @@ class LessonController extends Controller
             if ($request->hasFile('video')) {
                 $path = $request->file('video')->store('videos', 'public');
                 $validated["video_url"] = Storage::url($path);
+            }
+
+            if ($request->hasFile('audio')) {
+                $path = $request->file('audio')->store('lesson-audio', 'public');
+                $validated["audio_url"] = '/api/trainer/audio?f=' . basename($path);
             }
 
             if (isset($validated["type"])) {
@@ -144,11 +156,12 @@ class LessonController extends Controller
             }
 
             unset($validated["video"]);
+            unset($validated["audio"]);
             $lesson->update($validated);
 
             return response()->json([
                 "message" => "Lesson updated successfully",
-                "lesson" => $lesson,
+                "lesson" => ["id" => $lesson->id, "title" => $lesson->title, "type" => $lesson->type],
             ]);
         } catch (\Exception $e) {
             \Log::error("Lesson update error: " . $e->getMessage());

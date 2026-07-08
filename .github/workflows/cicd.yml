@@ -108,6 +108,7 @@ jobs:
             mkdir -p "$HOME/learningjourney/storage/app/public/videos"
             mkdir -p "$HOME/learningjourney/storage/app/public/images"
             mkdir -p "$HOME/learningjourney/storage/app/public/lesson-images"
+            mkdir -p "$HOME/learningjourney/storage/app/public/lesson-audio"
             mkdir -p "$HOME/learningjourney/storage/logs"
             mkdir -p "$HOME/learningjourney/storage/framework/cache"
             mkdir -p "$HOME/learningjourney/storage/framework/sessions"
