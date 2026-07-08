@@ -21,12 +21,19 @@ Route::get('/health/serve/{filename}', function (string $filename) {
 });
 
 // Public image serving — use query param to avoid host nginx static-file block
+// Uses file_get_contents to avoid QUIC streaming issues with response()->file()
 Route::get('/trainer/image', function (\Illuminate\Http\Request $request) {
     $filename = basename($request->query('f', ''));
     if (!$filename) abort(400);
     $path = storage_path('app/public/lesson-images/' . $filename);
     if (!is_file($path)) abort(404);
-    return response()->file($path, ['Cache-Control' => 'public, max-age=31536000, immutable']);
+    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+    $mimes = ['jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'gif' => 'image/gif', 'webp' => 'image/webp'];
+    $mime = $mimes[$ext] ?? 'image/jpeg';
+    return response(file_get_contents($path), 200, [
+        'Content-Type' => $mime,
+        'Cache-Control' => 'public, max-age=31536000, immutable',
+    ]);
 });
 
 Route::get('/health/storage', function () {

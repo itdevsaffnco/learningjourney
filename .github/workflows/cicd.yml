@@ -158,14 +158,15 @@ jobs:
             echo "  Backend  : http://${{ secrets.SERVER_HOST }}:2012"
 
       - name: Purge Cloudflare cache
+        continue-on-error: true
         run: |
           curl -s -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/purge_cache" \
             -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
             -H "Content-Type: application/json" \
             --data '{"purge_everything":true}' | tee /tmp/cf_purge.json
           if ! grep -q '"success":true' /tmp/cf_purge.json; then
-            echo "Cloudflare purge failed:"
+            echo "Cloudflare purge failed (add CF_ZONE_ID and CF_API_TOKEN secrets to fix):"
             cat /tmp/cf_purge.json
-            exit 1
+          else
+            echo "✓ Cloudflare cache purged"
           fi
-          echo "✓ Cloudflare cache purged"
