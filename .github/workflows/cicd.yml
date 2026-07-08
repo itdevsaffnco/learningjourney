@@ -108,7 +108,6 @@ jobs:
             mkdir -p "$HOME/learningjourney/storage/app/public/videos"
             mkdir -p "$HOME/learningjourney/storage/app/public/images"
             mkdir -p "$HOME/learningjourney/storage/app/public/lesson-images"
-            mkdir -p "$HOME/learningjourney/storage/app/public/lesson-audio"
             mkdir -p "$HOME/learningjourney/storage/logs"
             mkdir -p "$HOME/learningjourney/storage/framework/cache"
             mkdir -p "$HOME/learningjourney/storage/framework/sessions"
@@ -129,6 +128,7 @@ jobs:
             sleep 5
             docker exec learningjourney_backend php artisan storage:link --force
             docker exec learningjourney_backend php artisan migrate --force
+            docker exec learningjourney_backend mkdir -p /var/www/html/storage/app/public/lesson-audio
 
             # ── FRONTEND ─────────────────────────────────────────────────
             # Build image on the server — nginx:alpine gets pulled once and
