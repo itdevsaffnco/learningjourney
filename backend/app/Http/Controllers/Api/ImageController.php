@@ -17,7 +17,7 @@ class ImageController extends Controller
         $path = $request->file('image')->store('lesson-images', 'public');
 
         return response()->json([
-            'url' => '/api/trainer/image/' . basename($path),
+            'url' => '/api/trainer/image?f=' . basename($path),
         ]);
     }
 }
