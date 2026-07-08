@@ -14,6 +14,23 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\MysteryShopperController;
 use App\Http\Controllers\Api\ImageController;
 
+Route::get('/health/storage', function () {
+    $base = storage_path('app/public');
+    $lessonImages = $base . '/lesson-images';
+    $files = is_dir($lessonImages) ? array_values(array_diff(scandir($lessonImages), ['.', '..'])) : [];
+    $symlink = public_path('storage');
+    return response()->json([
+        'storage_base_exists' => is_dir($base),
+        'lesson_images_exists' => is_dir($lessonImages),
+        'sample_files' => array_slice($files, -5),
+        'total_files' => count($files),
+        'symlink_exists' => is_link($symlink),
+        'symlink_target' => is_link($symlink) ? readlink($symlink) : null,
+        'symlink_valid' => is_link($symlink) && is_dir(readlink($symlink)),
+        'web_route_reachable' => true,
+    ]);
+});
+
 Route::middleware('api')->group(function () {
     // Public Auth Routes (No authentication required)
     Route::post('/login', [AuthController::class, 'login']);
