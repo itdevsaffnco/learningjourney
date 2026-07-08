@@ -14,6 +14,12 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\MysteryShopperController;
 use App\Http\Controllers\Api\ImageController;
 
+Route::get('/health/serve/{filename}', function (string $filename) {
+    $path = storage_path('app/public/lesson-images/' . $filename);
+    if (!is_file($path)) abort(404, 'File not found at: ' . $path);
+    return response()->file($path);
+});
+
 Route::get('/health/storage', function () {
     $base = storage_path('app/public');
     $lessonImages = $base . '/lesson-images';
