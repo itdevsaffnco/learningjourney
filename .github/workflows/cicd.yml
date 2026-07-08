@@ -124,6 +124,11 @@ jobs:
               --restart unless-stopped \
               $BACKEND_IMAGE
 
+            echo "==> Running storage:link and migrations..."
+            sleep 5
+            docker exec learningjourney_backend php artisan storage:link --force
+            docker exec learningjourney_backend php artisan migrate --force
+
             # ── FRONTEND ─────────────────────────────────────────────────
             # Build image on the server — nginx:alpine gets pulled once and
             # stays cached. No Docker Hub pull on GitHub Actions runner.
