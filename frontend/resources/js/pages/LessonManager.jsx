@@ -452,38 +452,53 @@ export default function LessonManager() {
   }
 
 
-  const handleEditLesson = (lesson) => {
+  const handleEditLesson = async (lesson) => {
     setEditingLessonId(lesson.id)
-    setFormData({
-      title: lesson.title,
-      description: lesson.description || '',
-      type: lesson.type,
-      duration: {
-        value: lesson.duration_minutes || '',
-        unit: 'minutes'
-      },
-      video_url: lesson.video_url || '',
-      quiz_id: lesson.quiz_id || '',
-      randomize_questions: lesson.randomize_questions || false,
-      num_questions_to_show: lesson.num_questions_to_show || '',
-    })
-    if ((lesson.type === 'text' || lesson.type === 'video') && lesson.content) {
-      editor?.commands.setContent(lesson.content)
-    } else {
-      editor?.commands.clearContent()
-    }
-    if (lesson.type === 'video' && lesson.video_url) {
-      setVideoFileName('(Video uploaded)')
-    }
-    if (lesson.type === 'audio' && lesson.audio_url) {
-      setAudioFileName('(Audio uploaded)')
-      setFormData(prev => ({ ...prev, audio_url: lesson.audio_url }))
-    }
-    if (lesson.type === 'image' && lesson.image_url) {
-      setImageFileName('(Image uploaded)')
-      setFormData(prev => ({ ...prev, image_url: lesson.image_url }))
-    }
     setShowForm(true)
+    try {
+      const token = localStorage.getItem('token')
+      const res = await axios.get(`/api/modules/${moduleId}/lessons/${lesson.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const full = res.data.lesson
+      setFormData({
+        title: full.title,
+        description: full.description || '',
+        type: full.type,
+        duration: { value: full.duration_minutes || '', unit: 'minutes' },
+        video_url: full.video_url || '',
+        audio_url: full.audio_url || '',
+        image_url: full.image_url || '',
+        quiz_id: full.quiz_id || '',
+        randomize_questions: full.randomize_questions || false,
+        num_questions_to_show: full.num_questions_to_show || '',
+      })
+      if ((full.type === 'text' || full.type === 'video' || full.type === 'audio' || full.type === 'image') && full.content) {
+        editor?.commands.setContent(full.content)
+      } else {
+        editor?.commands.clearContent()
+      }
+      if (full.type === 'video' && full.video_url) setVideoFileName('(Video uploaded)')
+      if (full.type === 'audio' && full.audio_url) setAudioFileName('(Audio uploaded)')
+      if (full.type === 'image' && full.image_url) setImageFileName('(Image uploaded)')
+    } catch (err) {
+      console.error('Failed to load lesson:', err)
+      alert('Gagal memuat data lesson.')
+      setShowForm(false)
+      setEditingLessonId(null)
+    }
+  }
+
+  const handlePreviewLesson = async (lesson) => {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await axios.get(`/api/modules/${moduleId}/lessons/${lesson.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      setPreviewLesson(res.data.lesson)
+    } catch {
+      setPreviewLesson(lesson)
+    }
   }
 
   const handleDeleteLesson = (id) => {
@@ -1265,7 +1280,7 @@ export default function LessonManager() {
                     {reorderingLessonId === lesson.id ? <span className="text-xs">...</span> : <ChevronDown size={18} />}
                   </button>
                   <button
-                    onClick={() => setPreviewLesson(lesson)}
+                    onClick={() => handlePreviewLesson(lesson)}
                     className="p-2 hover:bg-emerald-50 rounded-lg transition-colors text-slate-600"
                     title="Preview"
                   >

@@ -13,7 +13,10 @@ class LessonController extends Controller
     public function index($moduleId)
     {
         $module = Module::findOrFail($moduleId);
-        $lessons = $module->lessons()->orderBy("order")->get();
+        $lessons = $module->lessons()
+            ->orderBy('order')
+            ->select(['id', 'title', 'type', 'video_url', 'image_url', 'quiz_id', 'randomize_questions', 'num_questions_to_show', 'duration_minutes', 'order', 'status', 'module_id', 'created_at', 'updated_at'])
+            ->get();
 
         return response()->json([
             "lessons" => $lessons,
