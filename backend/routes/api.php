@@ -20,6 +20,13 @@ Route::get('/health/serve/{filename}', function (string $filename) {
     return response()->file($path);
 });
 
+// Public image serving — bypasses host nginx /storage/ routing issue
+Route::get('/trainer/image/{filename}', function (string $filename) {
+    $path = storage_path('app/public/lesson-images/' . basename($filename));
+    if (!is_file($path)) abort(404);
+    return response()->file($path, ['Cache-Control' => 'public, max-age=31536000, immutable']);
+});
+
 Route::get('/health/storage', function () {
     $base = storage_path('app/public');
     $lessonImages = $base . '/lesson-images';
