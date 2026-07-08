@@ -694,7 +694,17 @@ export default function LessonManager() {
               exit={{ opacity: 0, scale: 0.95 }}
               className="fixed inset-0 flex items-center justify-center z-50 p-4"
             >
-              <div className="bg-white rounded-lg shadow-lg border border-gray-200 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="bg-white rounded-lg shadow-lg border border-gray-200 max-w-5xl w-full max-h-[90vh] overflow-y-auto relative">
+                {/* Loading overlay during submit */}
+                {submitting && (
+                  <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-lg gap-4">
+                    <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-700 rounded-full animate-spin" />
+                    <p className="text-slate-700 font-semibold text-base">
+                      {formData.type === 'video' && videoFile ? 'Mengupload video...' : editingLessonId ? 'Menyimpan perubahan...' : 'Membuat lesson...'}
+                    </p>
+                    <p className="text-slate-400 text-sm">Mohon tunggu, jangan tutup halaman ini</p>
+                  </div>
+                )}
                 {/* Modal Header */}
                 <div className="flex items-center justify-between px-8 py-6 border-b border-gray-200">
                   <h2 className="text-2xl font-bold text-slate-900">
