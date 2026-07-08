@@ -410,7 +410,7 @@ export default function LessonManager() {
           }
         },
       }).configure({
-        allowBase64: false,
+        allowBase64: true,
       }),
     ],
     content: '<p></p>',
