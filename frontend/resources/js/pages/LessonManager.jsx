@@ -36,7 +36,6 @@ function EditorContainer({ editor, children }) {
         const fd = new FormData()
         fd.append('image', file)
         const res = await axios.post('/api/trainer/upload-image', fd, { headers: { Authorization: `Bearer ${token}` } })
-        console.log('[IMG UPLOAD drag]', res.data.url)
         editor?.chain().focus().setImage({ src: res.data.url }).run()
       } catch {
         alert('Gagal upload gambar. Coba lagi.')
@@ -76,10 +75,8 @@ function Toolbar({ editor, showImage = true }) {
       const res = await axios.post('/api/trainer/upload-image', fd, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      console.log('[IMG UPLOAD toolbar]', res.data.url)
       editor.chain().focus().setImage({ src: res.data.url }).run()
-    } catch (err) {
-      console.error('[IMG UPLOAD toolbar error]', err)
+    } catch {
       alert('Gagal upload gambar. Coba lagi.')
     } finally {
       setUploading(false)
