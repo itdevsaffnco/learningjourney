@@ -36,7 +36,7 @@ function EditorContainer({ editor, children }) {
         const fd = new FormData()
         fd.append('image', file)
         const res = await axios.post('/api/trainer/upload-image', fd, { headers: { Authorization: `Bearer ${token}` } })
-        editor?.chain().focus().setImage({ src: res.data.url }).run()
+        editor?.chain().focus().insertContent(`<img src="${res.data.url}">`).run()
       } catch {
         alert('Gagal upload gambar. Coba lagi.')
       }
@@ -75,7 +75,7 @@ function Toolbar({ editor, showImage = true }) {
       const res = await axios.post('/api/trainer/upload-image', fd, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      editor.chain().focus().setImage({ src: res.data.url }).run()
+      editor.chain().focus().insertContent(`<img src="${res.data.url}">`).run()
     } catch {
       alert('Gagal upload gambar. Coba lagi.')
     } finally {
@@ -231,20 +231,30 @@ export default function LessonManager() {
         draggable: true,
         addAttributes() {
           return {
-            ...this.parent?.(),
+            src: {
+              default: null,
+              parseHTML: (element) => element.getAttribute('src'),
+              renderHTML: (attributes) => attributes.src ? { src: attributes.src } : {},
+            },
+            alt: {
+              default: null,
+              parseHTML: (element) => element.getAttribute('alt'),
+              renderHTML: (attributes) => attributes.alt ? { alt: attributes.alt } : {},
+            },
+            title: {
+              default: null,
+              parseHTML: (element) => element.getAttribute('title'),
+              renderHTML: (attributes) => attributes.title ? { title: attributes.title } : {},
+            },
             width: {
               default: 300,
-              parseHTML: (element) => element.getAttribute('width') || 300,
-              renderHTML: (attributes) => {
-                return { width: attributes.width }
-              },
+              parseHTML: (element) => parseInt(element.getAttribute('width')) || 300,
+              renderHTML: (attributes) => ({ width: attributes.width }),
             },
             align: {
               default: 'left',
-              parseHTML: (element) => element.getAttribute('align') || 'left',
-              renderHTML: (attributes) => {
-                return { align: attributes.align }
-              },
+              parseHTML: (element) => element.getAttribute('data-align') || element.getAttribute('align') || 'left',
+              renderHTML: (attributes) => ({ 'data-align': attributes.align }),
             },
           }
         },
