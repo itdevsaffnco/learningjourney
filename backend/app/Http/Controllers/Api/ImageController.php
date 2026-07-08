@@ -14,18 +14,10 @@ class ImageController extends Controller
             'image' => 'required|file|image|mimes:jpg,jpeg,png,gif,webp|max:10240',
         ]);
 
-        $file = $request->file('image');
-        $path = $file->store('lesson-images', 'public');
-
-        // Return as base64 data URL so the browser embeds the image directly
-        // without a separate HTTP request (avoids QUIC streaming issues via Cloudflare)
-        $mimeType = $file->getMimeType() ?: 'image/jpeg';
-        $dataUrl = 'data:' . $mimeType . ';base64,' . base64_encode(
-            file_get_contents(storage_path('app/public/' . $path))
-        );
+        $path = $request->file('image')->store('lesson-images', 'public');
 
         return response()->json([
-            'url' => $dataUrl,
+            'url' => '/api/trainer/image?f=' . basename($path),
         ]);
     }
 }

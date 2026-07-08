@@ -22,6 +22,32 @@ const checkImageSize = (file) => {
   return true
 }
 
+// Process image client-side: resize to max 1200px wide, compress to JPEG 75%
+// This avoids any HTTP request for image display (no Cloudflare QUIC issues)
+const compressImage = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const img = new Image()
+      img.onload = () => {
+        const MAX_W = 1200
+        const scale = Math.min(1, MAX_W / img.width)
+        const canvas = document.createElement('canvas')
+        canvas.width = Math.round(img.width * scale)
+        canvas.height = Math.round(img.height * scale)
+        const ctx = canvas.getContext('2d')
+        ctx.fillStyle = '#ffffff'
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+        resolve(canvas.toDataURL('image/jpeg', 0.75))
+      }
+      img.onerror = reject
+      img.src = ev.target.result
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+
 function EditorContainer({ editor, children }) {
   const [dragOver, setDragOver] = useState(false)
 
@@ -32,13 +58,10 @@ function EditorContainer({ editor, children }) {
     for (const file of files) {
       if (!checkImageSize(file)) continue
       try {
-        const token = localStorage.getItem('token')
-        const fd = new FormData()
-        fd.append('image', file)
-        const res = await axios.post('/api/trainer/upload-image', fd, { headers: { Authorization: `Bearer ${token}` } })
-        editor?.chain().focus().insertContent(`<img src="${res.data.url}">`).run()
+        const dataUrl = await compressImage(file)
+        editor?.chain().focus().insertContent(`<img src="${dataUrl}">`).run()
       } catch {
-        alert('Gagal upload gambar. Coba lagi.')
+        alert('Gagal memproses gambar. Coba lagi.')
       }
     }
     setDragOver(false)
@@ -69,15 +92,10 @@ function Toolbar({ editor, showImage = true }) {
     if (!checkImageSize(file)) return
     setUploading(true)
     try {
-      const token = localStorage.getItem('token')
-      const fd = new FormData()
-      fd.append('image', file)
-      const res = await axios.post('/api/trainer/upload-image', fd, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      editor.chain().focus().insertContent(`<img src="${res.data.url}">`).run()
+      const dataUrl = await compressImage(file)
+      editor.chain().focus().insertContent(`<img src="${dataUrl}">`).run()
     } catch {
-      alert('Gagal upload gambar. Coba lagi.')
+      alert('Gagal memproses gambar. Coba lagi.')
     } finally {
       setUploading(false)
     }
