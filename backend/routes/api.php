@@ -45,7 +45,11 @@ Route::get('/trainer/audio', function (\Illuminate\Http\Request $request) {
     $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
     $mimes = ['mp3' => 'audio/mpeg', 'wav' => 'audio/wav', 'm4a' => 'audio/mp4', 'ogg' => 'audio/ogg', 'aac' => 'audio/aac', 'flac' => 'audio/flac'];
     $mime = $mimes[$ext] ?? 'audio/mpeg';
-    return response()->file($path, ['Content-Type' => $mime, 'Accept-Ranges' => 'bytes']);
+    return response()->file($path, [
+        'Content-Type' => $mime,
+        'Accept-Ranges' => 'bytes',
+        'Cache-Control' => 'public, max-age=31536000, immutable',
+    ]);
 });
 
 Route::get('/health/storage', function () {
